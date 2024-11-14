@@ -6,6 +6,8 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.pi.connectraspberry.MyApplication;
+
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.BufferedReader;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Timer;
@@ -47,42 +50,97 @@ public class ImageSender {
             try {
                 while (isRunning) {
 
-                    long sTime = System.currentTimeMillis();
-                    available = is.available();
-                    long eTime = System.currentTimeMillis();
+                    //long sTime = System.currentTimeMillis();
+                    //available = is.available();
+                    //long eTime = System.currentTimeMillis();
                     //Log.d(TAG, "当前时间:" + System.currentTimeMillis() +",上次时间:" + lastReceiveTime);
-                    if ((System.currentTimeMillis() - lastReceiveTime) > 1000 * TIME_OUT) {
-                        //3秒没有数据，说明是断开了
-                        Log.d(TAG, "超时未接受到消息，断开," + "读取的时间间隔:" + (eTime - sTime) + "," + new Date().toLocaleString() + "," + new Date(lastReceiveTime).toLocaleString());
-                        if (socketListener != null)
-                            socketListener.onConnectLost();
+//                    if ((System.currentTimeMillis() - lastReceiveTime) > 1000 * TIME_OUT) {
+//                        //3秒没有数据，说明是断开了
+//                        Log.d(TAG, "超时未接受到消息，断开," + "读取的时间间隔:" + (eTime - sTime) + "," + new Date().toLocaleString() + "," + new Date(lastReceiveTime).toLocaleString());
+//                        if (socketListener != null)
+//                            socketListener.onConnectLost();
+//
+//                        closeSocket();
+//                        return;
+//                    }
 
-                        closeSocket();
-                        return;
+                    byte[] cmdTypeBuffer = new byte[9];
+                    int read3 = is.read(cmdTypeBuffer);
+
+                    if (read3 == -1) {
+//                        Log.d(TAG, "read3 等于-1  ====>" + read3);
+                        continue;
                     }
 
-                    if (available > 0) {
+//                    if (available > 0) {
 
+                    if (read3 > 0) {
                         //接受到了消息
-                        lastReceiveTime = System.currentTimeMillis();
-                        receiveByte = new byte[available];
-                        long ssT1 = System.currentTimeMillis();
-                        int read = is.read(receiveByte);
-                        long ssT2 = System.currentTimeMillis();
-                        String messageFromServer = new String(receiveByte);
-                        Log.d(TAG, "接受到了消息:" + messageFromServer + "读取间隔:" + (ssT2 - ssT1) + ",当前时间:" + new Date().toLocaleString() + ",上次" + new Date(lastReceiveTime).toLocaleString());
+//                        lastReceiveTime = System.currentTimeMillis();
+//                        receiveByte = new byte[available];
+//                        long ssT1 = System.currentTimeMillis();
+//                        int read = is.read(receiveByte);
+//                        long ssT2 = System.currentTimeMillis();
+                        String messageFromServer = new String(cmdTypeBuffer);
+
+
+//                        Log.d(TAG, "接受到了消息:" + messageFromServer + "读取间隔:" + (ssT2 - ssT1) + ",当前时间:" + new Date().toLocaleString() + ",上次" + new Date(lastReceiveTime).toLocaleString());
+                        Log.d(TAG, "接受到了消息:" + messageFromServer);
 
                         if (TextUtils.isEmpty(messageFromServer) || TextUtils.isEmpty(messageFromServer.trim())) {
-                            SystemClock.sleep(1000);
+                            // SystemClock.sleep(1000);
                             continue;
                         }
 
-                        Log.d(TAG, "发送eventbus");
-                        EventBus.getDefault().post("back:" + messageFromServer);
+                        if ("IMG_START".equals(messageFromServer)) {//图片指令
+
+                            //接受文件名长度
+                            byte[] nameLen = new byte[4];
+                            is.read(nameLen);
+                            int nameLength = ByteBuffer.wrap(nameLen).getInt();
+                            Log.d(TAG, "文件名长度====>" + nameLength);
+                            // 接收图片名称数据
+                            byte[] nameLenBuffer = new byte[nameLength];
+                            is.read(nameLenBuffer);
+                            String fileName = new String(nameLenBuffer);
+                            Log.d(TAG, "文件名称:" + fileName);
+
+                            // 接收图片数据长度
+                            byte[] lengthBuffer = new byte[4];
+                            int read1 = is.read(lengthBuffer);
+                            Log.d(TAG, "read1====>" + read1);
+                            int imageLength = ByteBuffer.wrap(lengthBuffer).getInt();
+                            Log.d(TAG, "图片长度imageLength====>" + imageLength);
+                            // 接收图片数据
+                            byte[] imageBuffer = new byte[imageLength];
+                            int read2 = is.read(imageBuffer);
+                            Log.d(TAG, " 读取图片结束:: " + read2);
+                            //保存图片到相册
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(imageBuffer, 0, imageBuffer.length);
+                            ImageUtil.saveImageToGallery(MyApplication.getInstance(), bitmap, fileName);
+
+
+                        } else if ("CMD_START".equals(messageFromServer)) {
+                            // 接收指令数据长度
+                            byte[] lengthBuffer = new byte[4];
+                            int r = is.read(lengthBuffer);
+                            Log.d(TAG, "r====>" + r);
+                            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
+                            Log.d(TAG, "指令长度cmdLength====>" + cmdLength);
+                            // 接收图片数据
+                            byte[] cmdBuffer = new byte[cmdLength];
+                            int read2 = is.read(cmdBuffer);
+                            String cmd = new String(cmdBuffer);
+                            Log.d(TAG, " 指令内容:: " + cmd);
+
+                            Log.d(TAG, "发送eventbus");
+                            EventBus.getDefault().post("back:" + cmd);
+                        }
 
                     }
 
                 }
+//                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -104,6 +162,11 @@ public class ImageSender {
 
 //            InputStream is = socket.getInputStream();
             is = socket.getInputStream();
+
+            //发送手机型号等信息
+            String phoneInfo = CommUtils.getPhoneInfo();
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            dos.write(phoneInfo.getBytes(StandardCharsets.UTF_8));
 
             lastReceiveTime = System.currentTimeMillis();
             isRunning = true;

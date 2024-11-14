@@ -26,7 +26,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.bumptech.glide.Glide;
 import com.pi.connectraspberry.service.EventMsg;
-import com.pi.connectraspberry.service.MyEvent;
 import com.pi.connectraspberry.service.MyService;
 import com.pi.connectraspberry.util.ImageSender;
 import com.pi.connectraspberry.util.ImageUtil;
@@ -39,9 +38,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
 
 import me.jingbin.library.ByRecyclerView;
 import me.jingbin.library.adapter.BaseByViewHolder;
@@ -520,9 +516,10 @@ public class MainActivity extends AppCompatActivity {
     private void checkPermissionAndOpenGallery() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE}, PERMISSION_REQUEST_CODE);
         } else {
 
         }
