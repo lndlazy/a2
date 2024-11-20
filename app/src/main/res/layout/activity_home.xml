@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="A2 converter"
+        android:textSize="15dp"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clWifi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shape_wifi_bg"
+        android:clickable="true"
+        android:padding="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle">
+
+
+        <ImageView
+            android:id="@+id/ivWifi"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@drawable/shape_wifi_bg"
+            android:padding="3dp"
+            android:src="@mipmap/ic_wifi_gray"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:text="1.Connect"
+            android:textSize="15dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/ivWifi"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clSend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        app:layout_constraintTop_toBottomOf="@id/clWifi">
+
+        <ImageView
+            android:id="@+id/ivSend"
+            android:layout_width="130dp"
+            android:layout_height="50dp"
+            android:background="@drawable/shape_send_bg"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:text="3.Send"
+            android:textColor="@color/white"
+            android:textSize="15dp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:src="@mipmap/ic_send"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toRightOf="@id/ivSend"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/ivSelect"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/shape_select_pic_bg"
+            app:layout_constraintBottom_toBottomOf="@id/ivSend"
+            app:layout_constraintRight_toLeftOf="@id/ivSend"
+            app:layout_constraintTop_toTopOf="@id/ivSend" />
+
+        <ImageView
+            android:id="@+id/ivPic"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
+            android:src="@mipmap/ic_select_pic"
+            app:layout_constraintLeft_toLeftOf="@id/ivSelect"
+            app:layout_constraintRight_toRightOf="@id/ivSelect"
+            app:layout_constraintTop_toTopOf="@id/ivSelect" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2.Select"
+            android:textSize="15dp"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="@id/ivPic"
+            app:layout_constraintRight_toRightOf="@id/ivPic"
+            app:layout_constraintTop_toBottomOf="@id/ivPic" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <me.jingbin.library.ByRecyclerView
+        android:id="@+id/tvRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:minHeight="350dp"
+        android:padding="5dp"
+        android:transcriptMode="alwaysScroll"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/clSend" />
+
+
+    <EditText
+        android:id="@+id/etSecond"
+        android:layout_width="80dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="15dp"
+        android:background="@color/gray"
+        android:hint="60"
+        android:paddingLeft="5dp"
+        android:textColor="@color/white"
+        android:textColorHint="@color/white"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />
+
+
+    <ImageView
+        android:id="@+id/ivConvert"
+        android:layout_width="130dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:src="@drawable/shape_convert_bg"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etSecond" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:text="4.Convert"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/ivConvert"
+        app:layout_constraintLeft_toLeftOf="@id/ivConvert"
+        app:layout_constraintRight_toRightOf="@id/ivConvert"
+        app:layout_constraintTop_toTopOf="@id/ivConvert" />
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginRight="8dp"
+        android:src="@mipmap/ic_convert"
+        app:layout_constraintBottom_toBottomOf="@id/ivConvert"
+        app:layout_constraintRight_toRightOf="@id/ivConvert"
+        app:layout_constraintTop_toTopOf="@id/ivConvert" />
+
+
+    <ImageView
+        android:id="@+id/ivPre"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginRight="30dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@mipmap/ic_last"
+        app:layout_constraintBottom_toBottomOf="@id/ivConvert"
+        app:layout_constraintRight_toLeftOf="@id/ivConvert"
+        app:layout_constraintTop_toTopOf="@id/ivConvert" />
+
+    <ImageView
+        android:id="@+id/ivNext"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginLeft="30dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@mipmap/ic_next"
+        app:layout_constraintBottom_toBottomOf="@id/ivConvert"
+        app:layout_constraintLeft_toRightOf="@id/ivConvert"
+        app:layout_constraintTop_toTopOf="@id/ivConvert" />
+
+    <TextView
+        android:id="@+id/tvSlide"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shape_slide_bg"
+        android:gravity="center"
+        android:text="Auto Slide Show"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ivConvert" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

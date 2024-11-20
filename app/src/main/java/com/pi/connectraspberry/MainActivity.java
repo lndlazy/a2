@@ -7,8 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -27,6 +30,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.bumptech.glide.Glide;
 import com.pi.connectraspberry.service.EventMsg;
 import com.pi.connectraspberry.service.MyService;
+import com.pi.connectraspberry.util.BMPConverter;
+import com.pi.connectraspberry.util.CommUtils;
 import com.pi.connectraspberry.util.ImageSender;
 import com.pi.connectraspberry.util.ImageUtil;
 import com.pi.connectraspberry.util.MyCommand;
@@ -42,7 +47,6 @@ import java.util.List;
 import me.jingbin.library.ByRecyclerView;
 import me.jingbin.library.adapter.BaseByViewHolder;
 import me.jingbin.library.adapter.BaseRecyclerAdapter;
-
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
@@ -67,7 +71,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
-        Log.d(TAG, "  ======onCreate==== ");
+
+        String phoneInfo = CommUtils.getPhoneInfo();
+
+        Log.d(TAG, "  ======onCreate====>>>>>>>>>>>>>>>>>> " + phoneInfo);
+
         setContentView(R.layout.activity_main);
         initView();
         checkPermissionAndOpenGallery();
@@ -552,6 +560,8 @@ public class MainActivity extends AppCompatActivity {
                     Uri imageUri = data.getClipData().getItemAt(0).getUri();
                     // 处理每张图片的Uri
                     // Log.d(TAG, "多张图片,每张的url:" + imageUri);
+
+                    convertDemo(ImageUtil.getRealPathFromURI(context, imageUri));
                     if (!alreadyList.contains(imageUri))
                         alreadyList.add(imageUri);
                 }
@@ -590,5 +600,37 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    private void convertDemo(String imageUrl) {
+
+//        String imageUrl = "https://example.com/your_image.jpg";
+
+        Bitmap bitMap = BitmapFactory.decodeFile(imageUrl); //bitMap是初始的bitmap对象
+
+
+        BMPConverter.convertToBMP(bitMap, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/a2/test111.bmp");
+
+//        int width = bitMap.getWidth();//Width 图片宽度
+//        int height = bitMap.getHeight();// Height 图片高度
+//
+//        Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+//        // bmpGrayscale 设置灰度之后的bitmap对象
+//
+////设置灰度  粘贴复制就好用
+//        Canvas c = new Canvas(bmpGrayscale);
+//        Paint paint = new Paint();
+//        ColorMatrix cm = new ColorMatrix();
+//        cm.setSaturation(0);
+//        ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+//        paint.setColorFilter(f);
+//        c.drawBitmap(bitMap, 0, 0, paint);
+
+
+
+
+
+
+    }
+
 
 }

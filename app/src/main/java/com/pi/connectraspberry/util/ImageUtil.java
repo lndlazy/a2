@@ -4,12 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 
 public class ImageUtil {
@@ -29,6 +31,21 @@ public class ImageUtil {
 
         return filePath;
     }
+
+
+//    public static void convertImageToBmp(String inputImagePath, String outputBmpPath) {
+//        try {
+//            // 从文件路径读取原始图片
+//            Bitmap originalBitmap = BitmapFactory.decodeFile(inputImagePath);
+//            File outputFile = new File(outputBmpPath);
+//            FileOutputStream fos = new FileOutputStream(outputFile);
+//            // 将原始图片压缩为BMP格式并保存
+//            originalBitmap.compress(Bitmap.CompressFormat.BMP, 100, fos);
+//            fos.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
     public static void saveImageToGallery(Context context, Bitmap bitmap, String imageFileName) {

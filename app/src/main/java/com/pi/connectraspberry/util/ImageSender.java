@@ -166,7 +166,7 @@ public class ImageSender {
             //发送手机型号等信息
             String phoneInfo = CommUtils.getPhoneInfo();
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            dos.write(phoneInfo.getBytes(StandardCharsets.UTF_8));
+            dos.write(("STR:mobile:" + phoneInfo).getBytes(StandardCharsets.UTF_8));
 
             lastReceiveTime = System.currentTimeMillis();
             isRunning = true;
@@ -205,6 +205,11 @@ public class ImageSender {
             Log.d(TAG, "发送的文件名称:" + file.getName());
             // 发送文件名
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+
+            //图片文件大小
+            long imgLength = file.length();
+
+
 //            byte[] fileNameBytes = file.getName().getBytes(StandardCharsets.UTF_8);
 
             // 发送文件名长度（4字节）
@@ -218,6 +223,8 @@ public class ImageSender {
 
             // 发送文件内容
             FileInputStream fis = new FileInputStream(file);
+
+
             byte[] buffer = new byte[1024 * 5];
             int bytesRead;
             while ((bytesRead = fis.read(buffer)) != -1) {
@@ -238,6 +245,28 @@ public class ImageSender {
 
     }
 
+
+    private static byte[] intToBytes(int value) {
+        return new byte[]{
+                (byte) (value >>> 24),
+                (byte) (value >>> 16),
+                (byte) (value >>> 8),
+                (byte) value
+        };
+    }
+
+    private static byte[] longToBytes(long value) {
+        return new byte[]{
+                (byte) (value >>> 56),
+                (byte) (value >>> 48),
+                (byte) (value >>> 40),
+                (byte) (value >>> 32),
+                (byte) (value >>> 24),
+                (byte) (value >>> 16),
+                (byte) (value >>> 8),
+                (byte) value
+        };
+    }
 
     /**
      * 发送指令
