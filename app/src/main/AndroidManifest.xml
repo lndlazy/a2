@@ -22,6 +22,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ConnectRaspberry">
 
+        <!--        &lt;!&ndash; 这个 Demo 主要展示副单位的用法, 如果只使用副单位 (pt、in、mm) 就可以直接以像素作为单位填写设计图的尺寸, 不需再把像素转化为 dp&ndash;&gt;-->
+        <!--        <meta-data-->
+        <!--            android:name="design_width_in_dp"-->
+        <!--            android:value="1080"/>-->
+        <!--        <meta-data-->
+        <!--            android:name="design_height_in_dp"-->
+        <!--            android:value="1920"/>-->
+
+
         <meta-data
             android:name="design_width_in_dp"
             android:value="360" />
@@ -38,7 +47,9 @@
 
         <activity
             android:name=".LocalActivity"
-            android:exported="true">
+            android:configChanges="orientation|screenSize"
+            android:exported="true"
+            android:screenOrientation="portrait">
 
             <!--            <intent-filter>-->
             <!--                <action android:name="android.intent.action.MAIN" />-->
@@ -49,7 +60,10 @@
         </activity>
         <activity
             android:name=".TestActivity"
-            android:exported="true">
+            android:configChanges="orientation|screenSize"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -57,6 +71,16 @@
             </intent-filter>
 
         </activity>
+
+        <activity
+            android:name=".ui.SettingActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.ClassifyActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait" />
 
         <service android:name=".service.MyService" />
 

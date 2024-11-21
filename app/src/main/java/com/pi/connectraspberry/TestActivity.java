@@ -3,11 +3,13 @@ package com.pi.connectraspberry;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioManager;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -19,11 +21,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.transition.Hold;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
+import com.pi.connectraspberry.ui.BaseActivity;
+import com.pi.connectraspberry.ui.ClassifyActivity;
+import com.pi.connectraspberry.ui.SettingActivity;
 import com.pi.connectraspberry.util.CommUtils;
 import com.pi.connectraspberry.util.ImageUtil;
 
@@ -35,22 +38,17 @@ import me.jingbin.library.adapter.BaseByViewHolder;
 import me.jingbin.library.adapter.BaseRecyclerAdapter;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class TestActivity extends AppCompatActivity implements View.OnClickListener {
+public class TestActivity extends BaseActivity implements View.OnClickListener {
 
     private static final String TAG = "TestActivity";
     private static final int RC_CAMERA_PERM = 33;
     private ByRecyclerView tvRecyclerView;
     private EditText etSecond;
-    private Context context;
+    private ImageView ivPreview;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // 隐藏导航栏
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        context = this;
 
         setContentView(R.layout.activity_home);
 //        setContentView(R.layout.layout_test);
@@ -66,12 +64,15 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
 
         ConstraintLayout clWifi = findViewById(R.id.clWifi);
         ImageView ivSend = findViewById(R.id.ivSend);
+        ImageView ivSetting = findViewById(R.id.ivSetting);
         ImageView ivSelect = findViewById(R.id.ivSelect);
+        ImageView ivClassify = findViewById(R.id.ivClassify);
         ImageView ivConvert = findViewById(R.id.ivConvert);
+        ivPreview = findViewById(R.id.ivPreview);
         ImageView ivPre = findViewById(R.id.ivPre);
         ImageView ivNext = findViewById(R.id.ivNext);
         TextView tvSlide = findViewById(R.id.tvSlide);
-        EditText etSecond = findViewById(R.id.etSecond);
+        etSecond = findViewById(R.id.etSecond);
         tvRecyclerView = findViewById(R.id.tvRecyclerView);
         initRecyclerView();
 
@@ -81,8 +82,13 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
         ivConvert.setOnClickListener(this);
         tvSlide.setOnClickListener(this);
         ivPre.setOnClickListener(this);
+        ivPreview.setOnClickListener(this);
         ivNext.setOnClickListener(this);
+        ivSetting.setOnClickListener(this);
+        ivClassify.setOnClickListener(this);
+
     }
+
 
     String[] pers = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE};
 
@@ -111,7 +117,6 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
 
 
     public static class MyImageAdapter extends BaseRecyclerAdapter<Uri> {
-
 
         public void restoreImageSize() {
             try {
@@ -143,13 +148,13 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
     private void initRecyclerView() {
 
         tvRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
-
         mAdapter = new MyImageAdapter(R.layout.item_preview_pic) {
             @Override
             protected void bindView(BaseByViewHolder<Uri> holder, Uri uri, int position) {
 //                holder.setText(R.id.tv_text, bean);
 
                 ImageView imageView = holder.getView(R.id.img);
+                ImageView ivDelete = holder.getView(R.id.ivDelete);
 
                 imageView.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
@@ -161,9 +166,7 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
                         imageView.setScaleY(originalScale * 1.1f);
                         // 设置可拖动状态为true
                         isDragging = true;
-
                         currentHolder = holder;
-
                         return true;
                     }
 
@@ -172,22 +175,22 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d(TAG, "点击事件: " + position + "," + isDragging);
-                        if (isDragging) {
-                            Log.d(TAG, "恢复缩放??");
-                            // 当点击且处于可拖动状态时，恢复原始大小并设置可拖动状态为false
-                            imageView.setScaleX(originalScale);
-                            imageView.setScaleY(originalScale);
-                            isDragging = false;
-                        } else {
-                            // 处理正常点击事件，这里可以添加其他逻辑，比如查看图片详情等
-                        }
+                        //显示图片预览
+                        showPicPreView(uri);
+
                     }
                 });
 
+                ivDelete.setOnClickListener(v -> {
+                    Log.d(TAG, "删除图片:" + position);
+                    alreadyList.remove(position);
+                    mAdapter.notifyDataSetChanged();
+                });
+
+
 //                holder.addOnClickListener(R.id.ivDelete);
 //                holder.addOnClickListener(R.id.img);
-                Glide.with(TestActivity.this)
+                Glide.with(context)
                         .load(uri)
                         .placeholder(R.mipmap.ic_loading)
                         .error(R.mipmap.ic_loading)
@@ -197,59 +200,8 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
             }
         };
 
-//        mAdapter = new BaseRecyclerAdapter<Uri>(R.layout.item_preview_pic, alreadyList) {
-//            @Override
-//            protected void bindView(BaseByViewHolder<Uri> holder, Uri uri, int position) {
-////                holder.setText(R.id.tv_text, bean);
-//
-//                ImageView imageView = holder.getView(R.id.img);
-//
-//                imageView.setOnLongClickListener(new View.OnLongClickListener() {
-//                    @Override
-//                    public boolean onLongClick(View v) {
-//                        // 记录原始缩放比例
-//                        originalScale = imageView.getScaleX();
-//                        // 放大图片
-//                        imageView.setScaleX(originalScale * 1.1f);
-//                        imageView.setScaleY(originalScale * 1.1f);
-//                        // 设置可拖动状态为true
-//                        isDragging = true;
-//                        return true;
-//                    }
-//
-//                });
-//
-//                imageView.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        Log.d(TAG, "点击事件: " + position + "," + isDragging);
-//                        if (isDragging) {
-//                            Log.d(TAG, "恢复缩放??");
-//                            // 当点击且处于可拖动状态时，恢复原始大小并设置可拖动状态为false
-//                            imageView.setScaleX(originalScale);
-//                            imageView.setScaleY(originalScale);
-//                            isDragging = false;
-//                        } else {
-//                            // 处理正常点击事件，这里可以添加其他逻辑，比如查看图片详情等
-//                        }
-//                    }
-//                });
-//
-////                holder.addOnClickListener(R.id.ivDelete);
-////                holder.addOnClickListener(R.id.img);
-//                Glide.with(TestActivity.this)
-//                        .load(uri)
-//                        .placeholder(R.mipmap.ic_loading)
-//                        .error(R.mipmap.ic_loading)
-//                        .dontAnimate() //加载没有任何动画
-//                        .into(imageView);
-//
-//            }
-//        };
-
         tvRecyclerView.setAdapter(mAdapter);
         mAdapter.setNewData(alreadyList);   // 设置第一页数据
-
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallback(mAdapter);
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
         itemTouchHelper.attachToRecyclerView(tvRecyclerView);
@@ -258,39 +210,9 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
 //        MyItemAnimator itemAnimator = new MyItemAnimator();
 //        tvRecyclerView.setItemAnimator(itemAnimator);
 
-//        tvRecyclerView.setOnItemChildClickListener(new ByRecyclerView.OnItemChildClickListener() {
-//
-//            @Override
-//            public void onItemChildClick(View view, int position) {
-//                switch (view.getId()) {
-//
-//                    case R.id.img:
-//                        Log.d(TAG, "点击的是图片: " + position);
-//                        break;
-//
-//                    case R.id.ivDelete:
-//                        Log.d(TAG, "点击的是删除: " + position);
-//
-//                        alreadyList.remove(position);
-//                        mAdapter.notifyDataSetChanged();
-//
-//                        break;
-//
-//                }
-//            }
-//
-//        });
 
     }
 
-    private void showToast(String msg) {
-
-        if (CommUtils.isMainLooper()) {
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-        } else
-            runOnUiThread(() -> Toast.makeText(context, msg, Toast.LENGTH_SHORT).show());
-
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -320,12 +242,19 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
                 int count = data.getClipData().getItemCount();
 
                 for (int i = 0; i < count; i++) {
+
+                    if (alreadyList.size() >= 9) {
+                        showToast("最多只能选择9张图片");
+                        break;
+                    }
+
                     //alreadyList.clear();
                     Uri imageUri = data.getClipData().getItemAt(i).getUri();
                     // 处理每张图片的Uri
                     Log.d(TAG, "多张图片,每张的url:" + imageUri);
                     if (!alreadyList.contains(imageUri))
                         alreadyList.add(imageUri);
+
                 }
             }
         }
@@ -342,34 +271,71 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+
+    private void showPicPreView(Uri uri) {
+
+        if (uri == null) {
+            showToast("图片地址为空");
+            return;
+        }
+
+        ivPreview.setVisibility(View.VISIBLE);
+        Glide.with(context)
+                .load(uri)
+                .placeholder(R.mipmap.ic_loading)
+                .error(R.mipmap.ic_loading)
+                .dontAnimate() //加载没有任何动画
+                .into(ivPreview);
+
+
+    }
+
+
+    private void hiddenPicPreView() {
+        ivPreview.setVisibility(View.GONE);
+        //把显示的图片清空掉
+        ivPreview.setImageDrawable(null);
+    }
+
     @Override
     public void onClick(View view) {
 
 
         switch (view.getId()) {
 
-            case R.id.clWifi:
+            case R.id.clWifi://连接wifi
                 break;
 
-            case R.id.ivSend:
+            case R.id.ivSend://发送图片
                 break;
 
             case R.id.ivSelect://去相册选择图片
                 openGallery();
                 break;
 
-            case R.id.ivConvert:
+            case R.id.ivConvert://转换
                 break;
 
             case R.id.tvSlide:
                 break;
 
-            case R.id.ivPre:
+            case R.id.ivPre://上一张
                 break;
 
-            case R.id.ivNext:
+            case R.id.ivSetting://设置
+                startActivity(SettingActivity.class);
                 break;
 
+            case R.id.ivClassify://分类
+                startActivity(ClassifyActivity.class);
+                break;
+
+            case R.id.ivNext://下一张
+                break;
+
+            case R.id.ivPreview://隐藏图片预览
+                hiddenPicPreView();
+                break;
 
         }
     }
@@ -383,3 +349,4 @@ public class TestActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 }
+

@@ -121,3 +121,6 @@
 #-keep public class * implements com.bumptech.glide.load.engine.prefill.PreFillTypeAdapterFactory$PreFillModelLoader
 -keepattributes Signature
 
+
+-dontwarn com.lxj.xpopup.widget.**
+-keep class com.lxj.xpopup.widget.**{*;}

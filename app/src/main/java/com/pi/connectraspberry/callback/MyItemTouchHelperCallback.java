@@ -2,12 +2,10 @@ package com.pi.connectraspberry.callback;
 
 import android.net.Uri;
 import android.util.Log;
-import android.widget.ImageView;
 
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.pi.connectraspberry.R;
 import com.pi.connectraspberry.TestActivity;
 
 import java.util.Collections;

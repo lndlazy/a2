@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/clRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
@@ -18,6 +19,28 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
+    <ImageView
+        android:id="@+id/ivSetting"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginRight="15dp"
+        android:padding="2dp"
+        android:src="@mipmap/ic_setting"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <ImageView
+        android:id="@+id/ivClassify"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginRight="15dp"
+        android:padding="2dp"
+        android:src="@mipmap/ic_classify"
+        app:layout_constraintRight_toLeftOf="@id/ivSetting"
+        app:layout_constraintTop_toTopOf="@id/ivSetting" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clWifi"
@@ -127,7 +150,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
     <me.jingbin.library.ByRecyclerView
         android:id="@+id/tvRecyclerView"
         android:layout_width="match_parent"
@@ -140,7 +162,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/clSend" />
-
 
     <EditText
         android:id="@+id/etSecond"
@@ -155,7 +176,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />
-
 
     <ImageView
         android:id="@+id/ivConvert"
@@ -187,7 +207,6 @@
         app:layout_constraintBottom_toBottomOf="@id/ivConvert"
         app:layout_constraintRight_toRightOf="@id/ivConvert"
         app:layout_constraintTop_toTopOf="@id/ivConvert" />
-
 
     <ImageView
         android:id="@+id/ivPre"
@@ -224,5 +243,13 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/ivConvert" />
+
+    <ImageView
+        android:id="@+id/ivPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#33000000"
+        android:padding="10dp"
+        android:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
