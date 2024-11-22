@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.pi.connectraspberry.TestActivity;
+import com.pi.connectraspberry.ui.ClassifyDetailActivity;
 
 import java.util.Collections;
 
@@ -43,10 +44,10 @@ public class MyItemTouchHelperCallback extends ItemTouchHelper.Callback {
     public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
                           RecyclerView.ViewHolder target) {
 
-        Log.d(TAG, "==============>>>onMove: " + viewHolder.getAdapterPosition() + " " + target.getAdapterPosition());
+        Log.d(TAG, "==============>>>onMove: " + viewHolder.getPosition() + " " + target.getPosition());
         // 交换数据位置
-        int fromPosition = viewHolder.getAdapterPosition();
-        int toPosition = target.getAdapterPosition();
+        int fromPosition = viewHolder.getPosition();
+        int toPosition = target.getPosition();
         if (fromPosition < toPosition) {
             for (int i = fromPosition; i < toPosition; i++) {
 
@@ -89,6 +90,12 @@ public class MyItemTouchHelperCallback extends ItemTouchHelper.Callback {
                     TestActivity.MyImageAdapter myImageAdapter = (TestActivity.MyImageAdapter) adapter;
                     myImageAdapter.restoreImageSize();
                 }
+
+                if (adapter instanceof ClassifyDetailActivity.DetailImageAdapter) {
+                    ClassifyDetailActivity.DetailImageAdapter detailImageAdapter = (ClassifyDetailActivity.DetailImageAdapter) adapter;
+                    detailImageAdapter.restoreImageSize();
+                }
+
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">A2 Convert</string>
+    <string name="classify">classify</string>
+    <string name="home_connect">1.Connect</string>
+    <string name="home_send">3.Send</string>
+    <string name="home_select">2.Select</string>
+    <string name="home_convert">4.Convert</string>
+    <string name="auto_slide_show">Auto Slide Show</string>
+    <string name="setting">setting</string>
+    <string name="add_new_classify">new classify</string>
+    <string name="please_enter_name">please input name</string>
+    <string name="add_classify_success">add classify success</string>
+    <string name="attention">note</string>
+    <string name="are_sure_show">are you sure show \'</string>
+    <string name="are_sure_show_after">\\\' folder pictures</string>
+    <string name="illegal_character">illegal character</string>
+    <string name="add_classify_fail">add fail</string>
+    <string name="delete_failed">delete fail</string>
+    <string name="delete_success">delete success</string>
+    <string name="most_nine">最多只能选择9张图片</string>
+    <string name="hasno_pic">图片地址为空</string>
 </resources>

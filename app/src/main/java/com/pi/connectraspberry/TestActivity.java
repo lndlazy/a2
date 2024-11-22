@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 
 import com.bumptech.glide.Glide;
+import com.orhanobut.logger.Logger;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
 import com.pi.connectraspberry.ui.BaseActivity;
 import com.pi.connectraspberry.ui.ClassifyActivity;
@@ -46,19 +47,15 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     private EditText etSecond;
     private ImageView ivPreview;
 
+
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.activity_home);
-//        setContentView(R.layout.layout_test);
-
-        initData();
-
-//        test();
+    protected int getLayoutId() {
+        return R.layout.activity_home;
     }
 
-    private void initData() {
+
+    @Override
+    protected void initView() {
         //请求权限
         mRequestPermission();
 
@@ -86,6 +83,10 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         ivNext.setOnClickListener(this);
         ivSetting.setOnClickListener(this);
         ivClassify.setOnClickListener(this);
+
+    }
+
+    protected void initData() {
 
     }
 
@@ -139,13 +140,17 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
         }
 
-
     }
 
 
     private static BaseByViewHolder<Uri> currentHolder;
 
     private void initRecyclerView() {
+
+
+        // 设置自定义ItemAnimator
+//        MyItemAnimator itemAnimator = new MyItemAnimator();
+//        tvRecyclerView.setItemAnimator(itemAnimator);
 
         tvRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         mAdapter = new MyImageAdapter(R.layout.item_preview_pic) {
@@ -205,12 +210,6 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallback(mAdapter);
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
         itemTouchHelper.attachToRecyclerView(tvRecyclerView);
-
-        // 设置自定义ItemAnimator
-//        MyItemAnimator itemAnimator = new MyItemAnimator();
-//        tvRecyclerView.setItemAnimator(itemAnimator);
-
-
     }
 
 
@@ -244,7 +243,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 for (int i = 0; i < count; i++) {
 
                     if (alreadyList.size() >= 9) {
-                        showToast("最多只能选择9张图片");
+                        showToast(getResources().getString(R.string.most_nine));
                         break;
                     }
 
@@ -252,8 +251,8 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                     Uri imageUri = data.getClipData().getItemAt(i).getUri();
                     // 处理每张图片的Uri
                     Log.d(TAG, "多张图片,每张的url:" + imageUri);
-                    if (!alreadyList.contains(imageUri))
-                        alreadyList.add(imageUri);
+//                    if (!alreadyList.contains(imageUri))
+                    alreadyList.add(imageUri);
 
                 }
             }
@@ -263,11 +262,11 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
             mAdapter.notifyDataSetChanged();
 
 
-        if (alreadyList != null && alreadyList.size() > 0) {
-            for (Uri uri : alreadyList) {
-                Log.d(TAG, "图片地址:" + ImageUtil.getRealPathFromURI(context, uri));
-            }
-        }
+//        if (alreadyList != null && alreadyList.size() > 0) {
+//            for (Uri uri : alreadyList) {
+//                Log.d(TAG, "图片地址:" + ImageUtil.getRealPathFromURI(context, uri));
+//            }
+//        }
 
     }
 
@@ -275,7 +274,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     private void showPicPreView(Uri uri) {
 
         if (uri == null) {
-            showToast("图片地址为空");
+            showToast(getResources().getString(R.string.hasno_pic));
             return;
         }
 

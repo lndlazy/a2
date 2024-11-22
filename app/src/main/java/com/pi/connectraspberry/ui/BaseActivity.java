@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.pi.connectraspberry.util.CommUtils;
 
-public class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends AppCompatActivity {
 
     protected Context context;
 
@@ -28,8 +28,18 @@ public class BaseActivity extends AppCompatActivity {
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                         View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         context = this;
+
+        setContentView(getLayoutId());
+        initView();
+        initData();
     }
 
+
+    protected abstract int getLayoutId();
+
+    protected abstract void initView();
+
+    protected abstract void initData();
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {

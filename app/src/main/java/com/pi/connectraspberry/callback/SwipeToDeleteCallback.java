@@ -5,15 +5,19 @@ import android.util.Log;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.pi.connectraspberry.MyApplication;
+import com.pi.connectraspberry.R;
 import com.pi.connectraspberry.bean.ClassifyBean;
+import com.pi.connectraspberry.util.FileUtils;
+import com.pi.connectraspberry.util.MToast;
 
 import me.jingbin.library.adapter.BaseRecyclerAdapter;
 
 public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
     private static final String TAG = "SwipeToDeleteCallback";
-    private final BaseRecyclerAdapter<ClassifyBean> adapter;
+    private final BaseRecyclerAdapter<String> adapter;
 
-    public SwipeToDeleteCallback(BaseRecyclerAdapter<ClassifyBean> adapter) {
+    public SwipeToDeleteCallback(BaseRecyclerAdapter<String> adapter) {
         this.adapter = adapter;
     }
 
@@ -41,7 +45,22 @@ public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
         Log.d(TAG, "==============>>>onSwiped: " + position);
         // 从数据集中删除该项目
 //        adapter.getdata().remove(position);
+
+        String name = adapter.getData().get(position);
+
+//        String name = classifyBean.();
+        Log.d(TAG, "要删除的文件名:" + name);
+        boolean b = FileUtils.deleteFile(name);
+
+        if (!b) {
+            MToast.show(MyApplication.getInstance().getResources().getString(R.string.delete_failed));
+            return;
+        }
+
+        MToast.show(MyApplication.getInstance().getResources().getString(R.string.delete_success));
         adapter.getData().remove(position);
+
+
         //((ArrayList<Object>) adapter.getItemList()).remove(position);
         // 通知适配器数据已改变
         adapter.notifyItemRemoved(position);

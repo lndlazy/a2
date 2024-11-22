@@ -19,7 +19,7 @@
         android:layout_height="50dp"
         android:gravity="center_vertical"
         android:paddingLeft="10dp"
-        android:text="文件夹"
+        android:text="folder name"
         android:textColor="@color/black"
         android:textSize="15sp"
         app:layout_constraintLeft_toRightOf="@id/iv"

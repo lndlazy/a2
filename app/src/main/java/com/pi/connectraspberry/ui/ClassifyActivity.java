@@ -2,9 +2,12 @@ package com.pi.connectraspberry.ui;
 
 import static java.security.AccessController.getContext;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -17,9 +20,13 @@ import com.pi.connectraspberry.R;
 import com.pi.connectraspberry.bean.ClassifyBean;
 import com.pi.connectraspberry.callback.MyItemAnimator;
 import com.pi.connectraspberry.callback.SwipeToDeleteCallback;
+import com.pi.connectraspberry.util.FileUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import me.jingbin.library.ByRecyclerView;
 import me.jingbin.library.adapter.BaseByViewHolder;
@@ -29,15 +36,17 @@ public class ClassifyActivity extends BaseActivity {
 
     private static final String TAG = "ClassifyActivity";
     private ByRecyclerView recyclerView;
-    private List<ClassifyBean> folderList;
-    private BaseRecyclerAdapter<ClassifyBean> mAdapter;
+    private List<String> folderList;
+    private BaseRecyclerAdapter<String> mAdapter;
+
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected int getLayoutId() {
+        return R.layout.activity_classify;
+    }
 
-        setContentView(R.layout.activity_classify);
-
+    @Override
+    protected void initView() {
         ImageView ivBack = findViewById(R.id.ivBack);
         ImageView ivAdd = findViewById(R.id.ivAdd);
         recyclerView = findViewById(R.id.recyclerView);
@@ -45,11 +54,14 @@ public class ClassifyActivity extends BaseActivity {
         ivBack.setOnClickListener(v -> finish());
         ivAdd.setOnClickListener(v -> addClassify());
         folderList = new ArrayList<>();
-        folderList.add(new ClassifyBean("周一", false));
-        folderList.add(new ClassifyBean("周二", false));
-        folderList.add(new ClassifyBean("周三", false));
+
+        folderList.addAll(FileUtils.getFolderList());
 
         initRecyclerView();
+    }
+
+    @Override
+    protected void initData() {
 
     }
 
@@ -58,12 +70,31 @@ public class ClassifyActivity extends BaseActivity {
      */
     private void addClassify() {
 
-        new XPopup.Builder(context).asInputConfirm("新增分类", "请输入分类名称",
+        new XPopup.Builder(context).asInputConfirm(getResources().getString(R.string.add_new_classify), getResources().getString(R.string.please_enter_name),
                         new OnInputConfirmListener() {
                             @Override
                             public void onConfirm(String text) {
                                 Log.d(TAG, "新增分类: " + text);
                                 //toast("input text: " + text);
+                                String specialChars = "\\s./, 。‘'*（）&%￥\\^?？#@！~：“；}\\{】【、|\\?\"<>";
+                                Pattern pattern = Pattern.compile("^[^" + specialChars + "]+$");
+                                Matcher matcher = pattern.matcher(text);
+                                boolean matches = matcher.matches();
+
+                                if (!matches) {
+                                    showToast(getResources().getString(R.string.illegal_character));
+                                    return;
+                                }
+
+                                boolean success = FileUtils.createFile(text);
+                                if (success)
+                                    showToast(getResources().getString(R.string.add_classify_success));
+                                else
+                                    showToast(getResources().getString(R.string.add_classify_fail));
+
+                                folderList.add(text);
+                                mAdapter.notifyDataSetChanged();
+
                             }
                         })
                 .show();
@@ -73,10 +104,10 @@ public class ClassifyActivity extends BaseActivity {
     private void initRecyclerView() {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        mAdapter = new BaseRecyclerAdapter<ClassifyBean>(R.layout.item_classify) {
+        mAdapter = new BaseRecyclerAdapter<String>(R.layout.item_classify) {
             @Override
-            protected void bindView(BaseByViewHolder<ClassifyBean> holder, ClassifyBean classifyBean, int position) {
-                holder.setText(R.id.tvFolderName, classifyBean.getName());
+            protected void bindView(BaseByViewHolder<String> holder, String classifyBean, int position) {
+                holder.setText(R.id.tvFolderName, classifyBean);
 
 //                holder.setImageResource(R.id.ivChoose, classifyBean.isChoose() ? R.mipmap.ic_choosed : R.mipmap.ic_no_choose);
                 //ImageView ivChoose = holder.getView(R.id.ivChoose);
@@ -104,16 +135,26 @@ public class ClassifyActivity extends BaseActivity {
             switch (view.getId()) {
                 case R.id.ivChoose:
                     //弹出提示，是否发送显示当前文件夹内的所有图片
-                    showDeleteDialog(folderList.get(position).getName());
+                    showDeleteDialog(folderList.get(position));
                     break;
             }
+        });
+
+        recyclerView.setOnItemClickListener((view, position) -> {
+            Log.e("TAG", "onItemClick: " + position);
+            //toast("点击了第" + position + "个");
+
+            Intent mIntent = new Intent(context, ClassifyDetailActivity.class);
+            mIntent.putExtra("classifyName", folderList.get(position));
+            startActivity(mIntent);
+
         });
     }
 
 
     private void showDeleteDialog(String name) {
         //弹出提示，是否删除当前文件夹
-        new XPopup.Builder(this).asConfirm("提示", "确定要显示'" + name + "'文件夹内的图片吗？",
+        new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.are_sure_show) + name + getResources().getString(R.string.are_sure_show_after),
                         new OnConfirmListener() {
                             @Override
                             public void onConfirm() {

@@ -2,9 +2,6 @@ package com.pi.connectraspberry.bean;
 
 public class ClassifyBean {
 
-
-
-
     private String name;
     private boolean isChoose;
 
@@ -15,8 +12,6 @@ public class ClassifyBean {
         this.name = name;
         this.isChoose = isChoose;
     }
-
-
 
     public String getName() {
         return name;

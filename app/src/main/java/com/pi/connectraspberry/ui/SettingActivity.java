@@ -9,15 +9,20 @@ import com.pi.connectraspberry.R;
 
 public class SettingActivity extends BaseActivity {
 
+
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected int getLayoutId() {
+        return R.layout.activity_setting;
+    }
 
-        setContentView(R.layout.activity_setting);
-
+    @Override
+    protected void initView() {
         ImageView ivBack = findViewById(R.id.ivBack);
         ivBack.setOnClickListener(v -> finish());
+    }
 
+    @Override
+    protected void initData() {
 
     }
 }
