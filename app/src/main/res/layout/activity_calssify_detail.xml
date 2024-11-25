@@ -52,11 +52,22 @@
 
 
     <ImageView
+        android:id="@+id/ivAdd"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_margin="20dp"
+        android:src="@mipmap/ic_add_circle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+
+    <ImageView
         android:id="@+id/ivPreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#33000000"
         android:padding="10dp"
         android:visibility="gone" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

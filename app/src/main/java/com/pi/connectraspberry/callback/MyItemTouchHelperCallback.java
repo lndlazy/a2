@@ -15,11 +15,11 @@ import me.jingbin.library.adapter.BaseRecyclerAdapter;
 
 public class MyItemTouchHelperCallback extends ItemTouchHelper.Callback {
     private static final String TAG = "MyItemTouchHelper";
-    private final BaseRecyclerAdapter<Uri> adapter;
+    private final BaseRecyclerAdapter<String> adapter;
 
     private int currentPosition = -1;
 
-    public MyItemTouchHelperCallback(BaseRecyclerAdapter<Uri> adapter) {
+    public MyItemTouchHelperCallback(BaseRecyclerAdapter<String> adapter) {
         this.adapter = adapter;
     }
 

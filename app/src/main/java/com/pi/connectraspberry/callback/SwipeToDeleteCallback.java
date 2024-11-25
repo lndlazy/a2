@@ -43,6 +43,7 @@ public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
 
         int position = viewHolder.getPosition();
         Log.d(TAG, "==============>>>onSwiped: " + position);
+
         // 从数据集中删除该项目
 //        adapter.getdata().remove(position);
 
@@ -50,7 +51,7 @@ public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
 
 //        String name = classifyBean.();
         Log.d(TAG, "要删除的文件名:" + name);
-        boolean b = FileUtils.deleteFile(name);
+        boolean b = FileUtils.deleteFile(FileUtils.getLocalBasePath() + name);
 
         if (!b) {
             MToast.show(MyApplication.getInstance().getResources().getString(R.string.delete_failed));

@@ -29,6 +29,7 @@ import com.pi.connectraspberry.ui.BaseActivity;
 import com.pi.connectraspberry.ui.ClassifyActivity;
 import com.pi.connectraspberry.ui.SettingActivity;
 import com.pi.connectraspberry.util.CommUtils;
+import com.pi.connectraspberry.util.FileUtils;
 import com.pi.connectraspberry.util.ImageUtil;
 
 import java.util.ArrayList;
@@ -111,13 +112,13 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
 
     private MyImageAdapter mAdapter;
-    protected List<Uri> alreadyList = new ArrayList<>();
+    protected List<String> alreadyList = new ArrayList<>();
 
     private float originalScale;
     private boolean isDragging;
 
 
-    public static class MyImageAdapter extends BaseRecyclerAdapter<Uri> {
+    public static class MyImageAdapter extends BaseRecyclerAdapter<String> {
 
         public void restoreImageSize() {
             try {
@@ -136,14 +137,14 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         }
 
         @Override
-        protected void bindView(BaseByViewHolder<Uri> holder, Uri bean, int position) {
+        protected void bindView(BaseByViewHolder<String> holder, String url, int position) {
 
         }
 
     }
 
 
-    private static BaseByViewHolder<Uri> currentHolder;
+    private static BaseByViewHolder<String> currentHolder;
 
     private void initRecyclerView() {
 
@@ -155,7 +156,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         tvRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         mAdapter = new MyImageAdapter(R.layout.item_preview_pic) {
             @Override
-            protected void bindView(BaseByViewHolder<Uri> holder, Uri uri, int position) {
+            protected void bindView(BaseByViewHolder<String> holder, String uri, int position) {
 //                holder.setText(R.id.tv_text, bean);
 
                 ImageView imageView = holder.getView(R.id.img);
@@ -250,9 +251,10 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                     //alreadyList.clear();
                     Uri imageUri = data.getClipData().getItemAt(i).getUri();
                     // 处理每张图片的Uri
-                    Log.d(TAG, "多张图片,每张的url:" + imageUri);
+//                    Log.d(TAG, "多张图片,每张的url:" + imageUri);
+//                    ImageUtil.getPathFromUri(this, imageUri);
 //                    if (!alreadyList.contains(imageUri))
-                    alreadyList.add(imageUri);
+                    alreadyList.add(ImageUtil.getPathFromUri(this, imageUri));
 
                 }
             }
@@ -260,7 +262,6 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
         if (mAdapter != null)
             mAdapter.notifyDataSetChanged();
-
 
 //        if (alreadyList != null && alreadyList.size() > 0) {
 //            for (Uri uri : alreadyList) {
@@ -271,7 +272,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     }
 
 
-    private void showPicPreView(Uri uri) {
+    private void showPicPreView(String uri) {
 
         if (uri == null) {
             showToast(getResources().getString(R.string.hasno_pic));
@@ -286,9 +287,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 .dontAnimate() //加载没有任何动画
                 .into(ivPreview);
 
-
     }
-
 
     private void hiddenPicPreView() {
         ivPreview.setVisibility(View.GONE);
@@ -298,7 +297,6 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-
 
         switch (view.getId()) {
 

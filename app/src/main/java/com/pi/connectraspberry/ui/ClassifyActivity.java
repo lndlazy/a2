@@ -1,25 +1,16 @@
 package com.pi.connectraspberry.ui;
 
-import static java.security.AccessController.getContext;
-
 import android.content.Intent;
-import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.widget.ImageView;
-import android.widget.Toast;
 
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.pi.connectraspberry.R;
-import com.pi.connectraspberry.bean.ClassifyBean;
 import com.pi.connectraspberry.callback.MyItemAnimator;
-import com.pi.connectraspberry.callback.SwipeToDeleteCallback;
 import com.pi.connectraspberry.util.FileUtils;
 
 import java.io.File;
@@ -121,12 +112,19 @@ public class ClassifyActivity extends BaseActivity {
         recyclerView.setAdapter(mAdapter);
         mAdapter.setNewData(folderList);   // 设置第一页数据
 
-        ItemTouchHelper.Callback callback = new SwipeToDeleteCallback(mAdapter);
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
-        itemTouchHelper.attachToRecyclerView(recyclerView);
+//        ItemTouchHelper.Callback callback = new SwipeToDeleteCallback(mAdapter);
+//        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
+//        itemTouchHelper.attachToRecyclerView(recyclerView);
 
         MyItemAnimator itemAnimator = new MyItemAnimator();
         recyclerView.setItemAnimator(itemAnimator);
+
+        recyclerView.setOnItemLongClickListener((view, position) -> {
+            Log.e("TAG", "onItemLongClick: " + position);
+            //toast("长按了第" + position + "个");
+            showDeleteDialog(folderList.get(position));
+            return true;
+        });
 
         recyclerView.setOnItemChildClickListener((view, position) -> {
             Log.e("TAG", "onItemChildClick: " + position);
@@ -135,7 +133,7 @@ public class ClassifyActivity extends BaseActivity {
             switch (view.getId()) {
                 case R.id.ivChoose:
                     //弹出提示，是否发送显示当前文件夹内的所有图片
-                    showDeleteDialog(folderList.get(position));
+                    showShowDialog(folderList.get(position));
                     break;
             }
         });
@@ -152,7 +150,7 @@ public class ClassifyActivity extends BaseActivity {
     }
 
 
-    private void showDeleteDialog(String name) {
+    private void showShowDialog(String name) {
         //弹出提示，是否删除当前文件夹
         new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.are_sure_show) + name + getResources().getString(R.string.are_sure_show_after),
                         new OnConfirmListener() {
@@ -160,6 +158,31 @@ public class ClassifyActivity extends BaseActivity {
                             public void onConfirm() {
                                 //toast("click confirm");
                                 Log.d(TAG, "发送显示当前文件夹内的所有图片");
+                            }
+                        })
+                .show();
+
+    }
+
+    private void showDeleteDialog(String name) {
+        //弹出提示，是否删除当前文件夹
+        new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.are_sure_delete) + name + getResources().getString(R.string.are_sure_delete_after),
+                        new OnConfirmListener() {
+                            @Override
+                            public void onConfirm() {
+                                //toast("click confirm");
+
+                                int i = FileUtils.deleteDirectory(new File(FileUtils.getLocalBasePath() + name));
+                                if (i == 0) {
+                                    showToast(getResources().getString(R.string.delete_success));
+                                    folderList.remove(name);
+                                    mAdapter.notifyDataSetChanged();
+                                } else if (i == -1) {
+                                    showToast(getResources().getString(R.string.folder_not_exist));
+                                } else if (i == -2) {
+                                    showToast(getResources().getString(R.string.delete_failed));
+                                }
+                                Log.d(TAG, "删除当前文件夹和文件夹内的所有图片");
                             }
                         })
                 .show();

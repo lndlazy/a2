@@ -1,5 +1,6 @@
 package com.pi.connectraspberry.util;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -13,6 +14,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImageUtil {
 
@@ -47,7 +50,13 @@ public class ImageUtil {
 //        }
 //    }
 
-
+    /**
+     * 保存树莓派发送过来的图片
+     *
+     * @param context
+     * @param bitmap
+     * @param imageFileName
+     */
     public static void saveImageToGallery(Context context, Bitmap bitmap, String imageFileName) {
         String savedImagePath = null;
         //String imageFileName = "JPEG_" + System.currentTimeMillis() + ".jpg";
@@ -74,12 +83,61 @@ public class ImageUtil {
         }
     }
 
+    /**
+     * 图片添加到系统相册
+     *
+     * @param context
+     * @param imagePath
+     */
     private static void galleryAddPic(Context context, String imagePath) {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(imagePath);
         Uri contentUri = Uri.fromFile(f);
         mediaScanIntent.setData(contentUri);
         context.sendBroadcast(mediaScanIntent);
+    }
+
+
+    public static String getPathFromUri(Context context, Uri uri) {
+        String path = null;
+        if ("content".equals(uri.getScheme())) {
+            ContentResolver contentResolver = context.getContentResolver();
+            Cursor cursor = contentResolver.query(uri, null, null, null, null);
+            if (cursor != null) {
+                try {
+                    if (cursor.moveToFirst()) {
+                        int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                        path = cursor.getString(columnIndex);
+                    }
+                } finally {
+                    cursor.close();
+                }
+            }
+        } else if ("file".equals(uri.getScheme())) {
+            path = uri.getPath();
+        }
+        return path;
+    }
+
+    public static List<String> findBMPImages(String targetDirectory) {
+        List<String> bmpImagePaths = new ArrayList<>();
+        File directory = new File(targetDirectory);
+        if (directory.exists() && directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (isBMPFile(file)) {
+                        bmpImagePaths.add(file.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        return bmpImagePaths;
+    }
+
+    private static boolean isBMPFile(File file) {
+        String fileName = file.getName();
+        return fileName.toLowerCase().endsWith(".bmp");
     }
 
 }
