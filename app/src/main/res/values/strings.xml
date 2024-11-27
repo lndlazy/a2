@@ -24,4 +24,5 @@
     <string name="folder_not_exist">file not exist</string>
     <string name="copy_failed">picture add fail</string>
     <string name="loading">loading</string>
+    <string name="no_pic">no pictures</string>
 </resources>

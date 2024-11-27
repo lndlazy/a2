@@ -125,14 +125,10 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 break;
 
             case R.id.ivAdd://添加图片
-
                 openGallery();
-
                 break;
 
-
         }
-
 
     }
 
@@ -178,6 +174,7 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 try {
                     copyPicture(data, count);
                 } catch (Exception e) {
+                    MLogger.e("复制图片失败:" + e.getMessage());
                     e.printStackTrace();
                 }
                 hideProgressDialog();
@@ -214,7 +211,6 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 //
 //                    Log.d(TAG, "图片地址:" + path);
 
-
             //原文件路径
             String imgPath = ImageUtil.getPathFromUri(this, imageUri);
             File imgFile = new File(imgPath);
@@ -224,8 +220,15 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
             //判断目录下是否已经有同名文件
             String fileName = imgFile.getName();
             Log.d(TAG, "图片名称:" + fileName);
+
             boolean repeat = FileUtils.isRepeat(new File(targetPath), fileName);
+
             String targetFileName = repeat ? FileUtils.add_1(fileName) : fileName;
+
+            //如果文件夹里还是有同名的文件，就在文件名后面再加_1
+            while (FileUtils.isRepeat(new File(targetPath), targetFileName)) {
+                targetFileName = FileUtils.add_1(targetFileName);
+            }
 
             boolean b = FileUtils.copyPic2CurrentFile(imgFile, targetPath, targetFileName);
 

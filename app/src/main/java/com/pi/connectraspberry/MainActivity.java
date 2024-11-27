@@ -47,6 +47,7 @@ import java.util.List;
 import me.jingbin.library.ByRecyclerView;
 import me.jingbin.library.adapter.BaseByViewHolder;
 import me.jingbin.library.adapter.BaseRecyclerAdapter;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
@@ -87,8 +88,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MyService.class);
         startService(intent);
 
-        boolean empty = TextUtils.isEmpty("  ".trim());
-        Log.d(TAG, "是否为空::" + empty);
+//        boolean empty = TextUtils.isEmpty("  ".trim());
+//        Log.d(TAG, "是否为空::" + empty);
 
 //        timerCheck();
     }
@@ -275,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 for (Uri uri : alreadyList) {
                     String realPathFromURI = ImageUtil.getRealPathFromURI(context, uri);
-                    boolean b = ImageSender.sendPic(realPathFromURI);
+                    boolean b = ImageSender.sendPic("", realPathFromURI);
                     SystemClock.sleep(1000);
                     showToast(b ? "发送成功" : "发送失败");
                 }
@@ -338,7 +339,6 @@ public class MainActivity extends AppCompatActivity {
         // 处理事件
         if (TextUtils.isEmpty(message))
             return;
-
 
         if (message.startsWith("back:")) {
             String msg = message.substring(5);
@@ -624,10 +624,6 @@ public class MainActivity extends AppCompatActivity {
 //        ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
 //        paint.setColorFilter(f);
 //        c.drawBitmap(bitMap, 0, 0, paint);
-
-
-
-
 
 
     }

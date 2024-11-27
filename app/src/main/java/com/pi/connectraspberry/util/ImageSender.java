@@ -1,5 +1,6 @@
 package com.pi.connectraspberry.util;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.SystemClock;
@@ -42,6 +43,9 @@ public class ImageSender {
 
     static volatile long lastReceiveTime = System.currentTimeMillis();
 
+    /**
+     * 接受消息
+     */
     static Runnable backNewsRun = new Runnable() {
         @Override
         public void run() {
@@ -165,6 +169,7 @@ public class ImageSender {
 
             //发送手机型号等信息
             String phoneInfo = CommUtils.getPhoneInfo();
+            Log.d(TAG, "手机信息:" + phoneInfo);
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
             dos.write(("STR:mobile:" + phoneInfo).getBytes(StandardCharsets.UTF_8));
 
@@ -194,49 +199,40 @@ public class ImageSender {
 
     }
 
-    public static boolean sendPic(String filePath) {
+    public static boolean sendPic(String picName, String picPath) {
 
         try {
 
             if (!isConnect())
                 return false;
 
-            File file = new File(filePath); // 替换为实际图片路径
-            Log.d(TAG, "发送的文件名称:" + file.getName());
-            // 发送文件名
-            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            File file = new File(picPath); // 替换为实际图片路径
 
+            if (TextUtils.isEmpty(picName))
+                picName = file.getName();
+
+            Log.d(TAG, "发送的文件名称:" + picName + ",文件路径:" + file.getAbsolutePath());
+
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
             //图片文件大小
             long imgLength = file.length();
-
-
-//            byte[] fileNameBytes = file.getName().getBytes(StandardCharsets.UTF_8);
-
-            // 发送文件名长度（4字节）
-            //dos.write(intToByteArray(fileNameBytes.length));
-
+            //发送类型
+            dos.write(MyCommand.PIC_START.getBytes(StandardCharsets.UTF_8));
+            //发送文件名长度
+            dos.write(longToByteArray(picName.length()));
             //发送文件名
-//            dos.writeUTF(file.getName());
-            dos.write(file.getName().getBytes(StandardCharsets.UTF_8));
-
-//            dos.write('\n'); // 用换行符分隔文件名
-
-            // 发送文件内容
+            dos.write(picName.getBytes(StandardCharsets.UTF_8));
+            //发送文件长度
+            dos.write(longToByteArray(imgLength));
+            //发送文件内容
             FileInputStream fis = new FileInputStream(file);
-
-
             byte[] buffer = new byte[1024 * 5];
             int bytesRead;
             while ((bytesRead = fis.read(buffer)) != -1) {
                 dos.write(buffer, 0, bytesRead);
             }
-
-            // 发送结束符
-//            dos.write("END".getBytes(StandardCharsets.UTF_8));
-//            dos.write("".getBytes(StandardCharsets.UTF_8)); // 用换行符分隔文件名
             fis.close();
             dos.flush();
-//            dos.close();
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -244,7 +240,6 @@ public class ImageSender {
         }
 
     }
-
 
     private static byte[] intToBytes(int value) {
         return new byte[]{
@@ -255,17 +250,13 @@ public class ImageSender {
         };
     }
 
-    private static byte[] longToBytes(long value) {
-        return new byte[]{
-                (byte) (value >>> 56),
-                (byte) (value >>> 48),
-                (byte) (value >>> 40),
-                (byte) (value >>> 32),
-                (byte) (value >>> 24),
-                (byte) (value >>> 16),
-                (byte) (value >>> 8),
-                (byte) value
-        };
+    public static byte[] longToByteArray(long value) {
+        byte[] byteArray = new byte[4];
+        byteArray[0] = (byte) (value >> 24);
+        byteArray[1] = (byte) (value >> 16);
+        byteArray[2] = (byte) (value >> 8);
+        byteArray[3] = (byte) value;
+        return byteArray;
     }
 
     /**
@@ -279,9 +270,17 @@ public class ImageSender {
             return false;
 
         try {
+            if (TextUtils.isEmpty(commandConvert))
+                return false;
+
             OutputStream outputStream = socket.getOutputStream();
-            String str = "STR:" + commandConvert;
-            outputStream.write(str.getBytes(StandardCharsets.UTF_8));
+            //String str = "STR:" + commandConvert;
+            //命令开始
+            outputStream.write(MyCommand.CMD_START.getBytes(StandardCharsets.UTF_8));
+            //指令长度
+            outputStream.write(longToByteArray(commandConvert.length()));
+            //指令内容
+            outputStream.write(commandConvert.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
             return true;
         } catch (Exception e) {

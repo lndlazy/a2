@@ -1,11 +1,15 @@
 package com.pi.connectraspberry;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,12 +29,21 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import com.bumptech.glide.Glide;
 import com.orhanobut.logger.Logger;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
+import com.pi.connectraspberry.service.EventMsg;
+import com.pi.connectraspberry.service.MyService;
 import com.pi.connectraspberry.ui.BaseActivity;
 import com.pi.connectraspberry.ui.ClassifyActivity;
 import com.pi.connectraspberry.ui.SettingActivity;
 import com.pi.connectraspberry.util.CommUtils;
 import com.pi.connectraspberry.util.FileUtils;
+import com.pi.connectraspberry.util.ImageSender;
 import com.pi.connectraspberry.util.ImageUtil;
+import com.pi.connectraspberry.util.MyCommand;
+import com.pi.connectraspberry.util.ThreadUtil;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +60,11 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     private ByRecyclerView tvRecyclerView;
     private EditText etSecond;
     private ImageView ivPreview;
+    private MyService mService;
+    private boolean mBound = false;
+
+    String[] pers = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE};
+    private ImageView ivWifi;
 
 
     @Override
@@ -62,6 +80,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
         ConstraintLayout clWifi = findViewById(R.id.clWifi);
         ImageView ivSend = findViewById(R.id.ivSend);
+        ivWifi = findViewById(R.id.ivWifi);
         ImageView ivSetting = findViewById(R.id.ivSetting);
         ImageView ivSelect = findViewById(R.id.ivSelect);
         ImageView ivClassify = findViewById(R.id.ivClassify);
@@ -88,11 +107,129 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     }
 
     protected void initData() {
+        //获取手机信息
+        String phoneInfo = CommUtils.getPhoneInfo();
+
+        EventBus.getDefault().register(this);
+
+        connectService();
+
+        Intent intent = new Intent(this, MyService.class);
+        startService(intent);
 
     }
 
 
-    String[] pers = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE};
+    private void connectService() {
+        Intent intent = new Intent(this, MyService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            Log.d(TAG, "===service绑定成功===");
+            MyService.LocalBinder binder = (MyService.LocalBinder) service;
+            mService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            Log.d(TAG, "===service断开连接===");
+            mBound = false;
+        }
+    };
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(String message) {
+
+        // 处理事件
+        if (TextUtils.isEmpty(message))
+            return;
+
+        if (message.startsWith("back:")) {
+            String msg = message.substring(5);
+            showToast(msg);
+            return;
+        }
+
+        switch (message) {
+
+            case EventMsg.CONNECT_SUCCESS:
+                break;
+
+            case EventMsg.CONNECT_SUCCESS_STATUS:// 显示连接成功状态
+                connectSuccessStatus();
+                break;
+
+            case EventMsg.CONNECT_FAIL_STATUS:// 显示连接失败状态
+                noConnectStatus();
+                break;
+
+            case EventMsg.CLEAR_PIC_DATA:// 清除数据
+                clearPicData();
+                break;
+
+        }
+
+    }
+
+
+    private void showPic(ImageView iv, String uri) {
+        Glide.with(context)
+                .load(uri)
+                .placeholder(R.mipmap.ic_loading)
+                .error(R.mipmap.ic_loading)
+                .dontAnimate() //加载没有任何动画
+                .into(iv);
+    }
+
+
+    private void showPic(ImageView iv, int resId) {
+        Glide.with(context)
+                .load(resId)
+                .placeholder(R.mipmap.ic_loading)
+                .error(R.mipmap.ic_loading)
+                .dontAnimate() //加载没有任何动画
+                .into(iv);
+    }
+
+    public void connectSuccessStatus() {
+
+        if (CommUtils.isMainLooper()) {
+            showPic(ivWifi, R.mipmap.ic_wifi_blue);
+
+        } else
+            runOnUiThread(() -> {
+                showPic(ivWifi, R.mipmap.ic_wifi_blue);
+            });
+
+    }
+
+    //未连接状态
+    private void noConnectStatus() {
+
+        if (CommUtils.isMainLooper()) {
+            showPic(ivWifi, R.mipmap.ic_wifi_gray);
+
+        } else
+            runOnUiThread(() -> {
+                showPic(ivWifi, R.mipmap.ic_wifi_gray);
+            });
+    }
+
+    private void clearPicData() {
+        try {
+            alreadyList.clear();
+            mAdapter.notifyDataSetChanged();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * 申请权限
@@ -295,15 +432,39 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         ivPreview.setImageDrawable(null);
     }
 
+
+    int picNum = 1;
+
     @Override
     public void onClick(View view) {
 
         switch (view.getId()) {
 
             case R.id.clWifi://连接wifi
+                connectSocket();
                 break;
 
             case R.id.ivSend://发送图片
+
+                if (alreadyList == null || alreadyList.isEmpty()) {
+                    showToast(getResources().getString(R.string.no_pic));
+                    return;
+                }
+
+                picNum = 1;
+
+                ThreadUtil.getParallelExecutor().execute(() -> {
+
+                    String picName;
+
+                    for (String filePath : alreadyList) {
+                        picName = "Picture_" + picNum + ".bmp";
+                        picNum++;
+                        ImageSender.sendPic(picName, filePath);
+                    }
+
+                });
+
                 break;
 
             case R.id.ivSelect://去相册选择图片
@@ -314,9 +475,11 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 break;
 
             case R.id.tvSlide:
+                auto();
                 break;
 
             case R.id.ivPre://上一张
+                choosePrePic();
                 break;
 
             case R.id.ivSetting://设置
@@ -328,6 +491,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 break;
 
             case R.id.ivNext://下一张
+                chooseNextPic();
                 break;
 
             case R.id.ivPreview://隐藏图片预览
@@ -337,6 +501,56 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         }
     }
 
+    Runnable autoRunnable = () -> {
+        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_AUTO);
+        //showToast(b ? "发送成功" : "发送失败");
+        if (!b) {
+            noConnectStatus();
+        }
+    };
+
+    Runnable preRunnable = () -> {
+        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_PRE);
+        //showToast(b ? "发送成功" : "发送失败");
+        if (!b) {
+            noConnectStatus();
+        }
+    };
+
+    Runnable nextRunnable = () -> {
+        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_NEXT);
+        //showToast(b ? "发送成功" : "发送失败");
+        if (!b) {
+            noConnectStatus();
+        }
+    };
+
+    private void auto() {
+        ThreadUtil.getParallelExecutor().execute(autoRunnable);
+    }
+
+    private void chooseNextPic() {
+        ThreadUtil.getParallelExecutor().execute(nextRunnable);
+    }
+
+    private void choosePrePic() {
+        ThreadUtil.getParallelExecutor().execute(preRunnable);
+    }
+
+    //连接socket
+    private void connectSocket() {
+
+        try {
+            if (mService != null)
+                mService.connectSocket();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+//        parallelExecutor = ThreadUtil.getParallelExecutor();
+//        parallelExecutor.execute(connectRunnable);
+    }
+
 
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK);
@@ -344,6 +558,45 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         startActivityForResult(Intent.createChooser(intent, "Select Pictures"), PICK_IMAGES);
     }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        try {
+            EventBus.getDefault().unregister(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+//        try {
+        Log.d(TAG, "===========onDestroy===========");
+//            if (parallelExecutor != null)
+//                parallelExecutor.shutdown();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            parallelExecutor = null;
+//        }
+
+        try {
+            if (mBound && mConnection != null) {
+                unbindService(mConnection);
+                mBound = false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            ImageSender.closeSocket();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
 }
 
