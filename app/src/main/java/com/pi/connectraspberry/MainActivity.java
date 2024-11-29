@@ -32,7 +32,7 @@ import com.pi.connectraspberry.service.EventMsg;
 import com.pi.connectraspberry.service.MyService;
 import com.pi.connectraspberry.util.BMPConverter;
 import com.pi.connectraspberry.util.CommUtils;
-import com.pi.connectraspberry.util.ImageSender;
+import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ImageUtil;
 import com.pi.connectraspberry.util.MyCommand;
 import com.pi.connectraspberry.util.ThreadUtil;
@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     Runnable convertRunnable = () -> {
-        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_CONVERT);
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CONVERT);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();
@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     Runnable autoRunnable = () -> {
-        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_AUTO);
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_AUTO);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();
@@ -228,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     Runnable preRunnable = () -> {
-        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_PRE);
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_PRE);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();
@@ -236,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     Runnable nextRunnable = () -> {
-        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_NEXT);
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_NEXT);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();
@@ -263,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (!ImageSender.isConnect()) {
+        if (!SocketSender.isConnect()) {
             showToast("未连接");
             return;
         }
@@ -276,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 for (Uri uri : alreadyList) {
                     String realPathFromURI = ImageUtil.getRealPathFromURI(context, uri);
-                    boolean b = ImageSender.sendPic("", realPathFromURI);
+                    boolean b = SocketSender.sendPic("", realPathFromURI);
                     SystemClock.sleep(1000);
                     showToast(b ? "发送成功" : "发送失败");
                 }
@@ -414,12 +414,12 @@ public class MainActivity extends AppCompatActivity {
     private Runnable connectRunnable = () -> {
 
         Log.d(TAG, "开始连接");
-        if (ImageSender.isConnect()) {
+        if (SocketSender.isConnect()) {
             connectSuccessStatus();
             return;
         }
 
-        boolean b = ImageSender.connectSocket(this::noConnectStatus);
+        boolean b = SocketSender.connectSocket(this::noConnectStatus);
 
         Log.d(TAG, "是否连接成功:" + b);
         if (b) {
@@ -475,7 +475,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
-            ImageSender.closeSocket();
+            SocketSender.closeSocket();
         } catch (Exception e) {
             e.printStackTrace();
         }

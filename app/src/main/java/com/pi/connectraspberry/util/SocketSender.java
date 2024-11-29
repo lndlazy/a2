@@ -1,9 +1,7 @@
 package com.pi.connectraspberry.util;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -15,18 +13,18 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 
-public class ImageSender {
+public class SocketSender {
 
     private static final String SERVER_IP = "10.0.0.1"; // 替换为树莓派的IP
     private static final int SERVER_PORT = 12345;
@@ -35,7 +33,7 @@ public class ImageSender {
     private static Timer timer;
     private static BufferedReader in;
     private static InputStream is;
-    private static final int TIME_OUT = 8;
+    private static final int TIME_OUT = 5;
 
     private static boolean isRunning = true;
 
@@ -54,39 +52,27 @@ public class ImageSender {
             try {
                 while (isRunning) {
 
-                    //long sTime = System.currentTimeMillis();
-                    //available = is.available();
-                    //long eTime = System.currentTimeMillis();
-                    //Log.d(TAG, "当前时间:" + System.currentTimeMillis() +",上次时间:" + lastReceiveTime);
-//                    if ((System.currentTimeMillis() - lastReceiveTime) > 1000 * TIME_OUT) {
-//                        //3秒没有数据，说明是断开了
-//                        Log.d(TAG, "超时未接受到消息，断开," + "读取的时间间隔:" + (eTime - sTime) + "," + new Date().toLocaleString() + "," + new Date(lastReceiveTime).toLocaleString());
-//                        if (socketListener != null)
-//                            socketListener.onConnectLost();
-//
-//                        closeSocket();
-//                        return;
-//                    }
-
+                    long l00 = System.currentTimeMillis();
                     byte[] cmdTypeBuffer = new byte[9];
                     int read3 = is.read(cmdTypeBuffer);
+                    long l01 = System.currentTimeMillis();
+                    Log.d(TAG, "read3的长度:" + read3 + ",时间间隔:" + (l01 - l00));
 
-                    if (read3 == -1) {
-//                        Log.d(TAG, "read3 等于-1  ====>" + read3);
-                        continue;
+                    if (System.currentTimeMillis() - lastReceiveTime > TIME_OUT * 1000) {
+                        Log.e(TAG, " 超时   断开连接 ????   ");
                     }
+
+//                    if (read3 == -1) {
+////                        Log.d(TAG, "read3 等于-1  ====>" + read3);
+//                        continue;
+//                    }
 
 //                    if (available > 0) {
 
                     if (read3 > 0) {
                         //接受到了消息
-//                        lastReceiveTime = System.currentTimeMillis();
-//                        receiveByte = new byte[available];
-//                        long ssT1 = System.currentTimeMillis();
-//                        int read = is.read(receiveByte);
-//                        long ssT2 = System.currentTimeMillis();
+                        lastReceiveTime = System.currentTimeMillis();
                         String messageFromServer = new String(cmdTypeBuffer);
-
 
 //                        Log.d(TAG, "接受到了消息:" + messageFromServer + "读取间隔:" + (ssT2 - ssT1) + ",当前时间:" + new Date().toLocaleString() + ",上次" + new Date(lastReceiveTime).toLocaleString());
                         Log.d(TAG, "接受到了消息:" + messageFromServer);
@@ -96,7 +82,7 @@ public class ImageSender {
                             continue;
                         }
 
-                        if ("IMG_START".equals(messageFromServer)) {//图片指令
+                        if (MyCommand.CMD_IMG.equals(messageFromServer)) {//图片指令
 
                             //接受文件名长度
                             byte[] nameLen = new byte[4];
@@ -124,21 +110,33 @@ public class ImageSender {
                             ImageUtil.saveImageToGallery(MyApplication.getInstance(), bitmap, fileName);
 
 
-                        } else if ("CMD_START".equals(messageFromServer)) {
+                        } else if (MyCommand.CMD_CMD.equals(messageFromServer)) {
                             // 接收指令数据长度
+                            long l1 = System.currentTimeMillis();
                             byte[] lengthBuffer = new byte[4];
+                            long l2 = System.currentTimeMillis();
                             int r = is.read(lengthBuffer);
-                            Log.d(TAG, "r====>" + r);
+                            long l3 = System.currentTimeMillis();
+                            //Log.d(TAG, "r====>" + r);
                             int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
-                            Log.d(TAG, "指令长度cmdLength====>" + cmdLength);
+                            long l4 = System.currentTimeMillis();
+                            //Log.d(TAG, "指令长度cmdLength====>" + cmdLength);
                             // 接收图片数据
                             byte[] cmdBuffer = new byte[cmdLength];
                             int read2 = is.read(cmdBuffer);
+                            long l5 = System.currentTimeMillis();
                             String cmd = new String(cmdBuffer);
-                            Log.d(TAG, " 指令内容:: " + cmd);
+                            long l6 = System.currentTimeMillis();
+                            //Log.d(TAG, " 指令内容:: " + cmd);
 
-                            Log.d(TAG, "发送eventbus");
-                            EventBus.getDefault().post("back:" + cmd);
+                            if ("HEART".equals(cmd)) {
+                                Log.d(TAG, "心跳 -> " + new Date().toLocaleString() + ",时间间隔" + (l2 - l1) + "," + (l3 - l2) + "," + (l4 - l3) + "," + (l5 - l4) + "," + (l6 - l5) + "," + (l6 - l1));
+                            } else {
+
+                                Log.d(TAG, "发送eventbus");
+                                EventBus.getDefault().post("back:" + cmd);
+                            }
+
                         }
 
                     }
@@ -170,13 +168,12 @@ public class ImageSender {
             //发送手机型号等信息
             String phoneInfo = CommUtils.getPhoneInfo();
             Log.d(TAG, "手机信息:" + phoneInfo);
-            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            dos.write(("STR:mobile:" + phoneInfo).getBytes(StandardCharsets.UTF_8));
+
+            sendCommand("mobile:" + phoneInfo);
+//            dos.write(("STR:mobile:" + phoneInfo).getBytes(StandardCharsets.UTF_8));
 
             lastReceiveTime = System.currentTimeMillis();
             isRunning = true;
-//            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
             ExecutorService executor = ThreadUtil.getParallelExecutor();
             executor.execute(backNewsRun);
 
@@ -189,7 +186,6 @@ public class ImageSender {
 
     }
 
-
     public static boolean isConnect() {
 
         if (socket == null)
@@ -199,45 +195,41 @@ public class ImageSender {
 
     }
 
-    public static boolean sendPic(String picName, String picPath) {
+    public static boolean sendPic(String picName, String picPath) throws Exception {
 
-        try {
-
-            if (!isConnect())
-                return false;
-
-            File file = new File(picPath); // 替换为实际图片路径
-
-            if (TextUtils.isEmpty(picName))
-                picName = file.getName();
-
-            Log.d(TAG, "发送的文件名称:" + picName + ",文件路径:" + file.getAbsolutePath());
-
-            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            //图片文件大小
-            long imgLength = file.length();
-            //发送类型
-            dos.write(MyCommand.PIC_START.getBytes(StandardCharsets.UTF_8));
-            //发送文件名长度
-            dos.write(longToByteArray(picName.length()));
-            //发送文件名
-            dos.write(picName.getBytes(StandardCharsets.UTF_8));
-            //发送文件长度
-            dos.write(longToByteArray(imgLength));
-            //发送文件内容
-            FileInputStream fis = new FileInputStream(file);
-            byte[] buffer = new byte[1024 * 5];
-            int bytesRead;
-            while ((bytesRead = fis.read(buffer)) != -1) {
-                dos.write(buffer, 0, bytesRead);
-            }
-            fis.close();
-            dos.flush();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!isConnect())
             return false;
+
+        File file = new File(picPath); // 替换为实际图片路径
+
+        if (TextUtils.isEmpty(picName))
+            picName = file.getName();
+
+        Log.d(TAG, "发送的文件名称:" + picName + ",文件路径:" + file.getAbsolutePath());
+
+        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+        //图片文件大小
+        long imgLength = file.length();
+        //发送类型
+        dos.write(MyCommand.PIC_START.getBytes(StandardCharsets.UTF_8));
+        //发送文件名长度
+        dos.write(longToByteArray(picName.length()));
+        //发送文件名
+        dos.write(picName.getBytes(StandardCharsets.UTF_8));
+        //发送文件长度
+        Log.d(TAG, "图片文件长度" + imgLength);
+        dos.write(longToByteArray(imgLength));
+        //发送文件内容
+        FileInputStream fis = new FileInputStream(file);
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = fis.read(buffer)) != -1) {
+            dos.write(buffer, 0, bytesRead);
         }
+        fis.close();
+        dos.flush();
+        return true;
+
 
     }
 

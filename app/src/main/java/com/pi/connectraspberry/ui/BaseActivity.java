@@ -1,5 +1,6 @@
 package com.pi.connectraspberry.ui;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.pi.connectraspberry.R;
 import com.pi.connectraspberry.util.CommUtils;
 
 public abstract class BaseActivity extends AppCompatActivity {
@@ -76,4 +78,30 @@ public abstract class BaseActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    protected ProgressDialog dialog;
+
+    protected void showProgressDialog(String msg) {
+
+        if (dialog == null) {
+            dialog = new ProgressDialog(this);
+            dialog.setCancelable(true);
+        }
+        dialog.setMessage(msg);
+        if (!dialog.isShowing())
+            dialog.show();
+
+    }
+
+    protected void hideProgressDialog() {
+        if (dialog != null && dialog.isShowing())
+            dialog.dismiss();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        hideProgressDialog();
+
+    }
 }

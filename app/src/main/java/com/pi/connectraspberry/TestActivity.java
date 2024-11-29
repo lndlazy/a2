@@ -5,29 +5,21 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Rect;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 
 import com.bumptech.glide.Glide;
-import com.orhanobut.logger.Logger;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
 import com.pi.connectraspberry.service.EventMsg;
 import com.pi.connectraspberry.service.MyService;
@@ -35,8 +27,7 @@ import com.pi.connectraspberry.ui.BaseActivity;
 import com.pi.connectraspberry.ui.ClassifyActivity;
 import com.pi.connectraspberry.ui.SettingActivity;
 import com.pi.connectraspberry.util.CommUtils;
-import com.pi.connectraspberry.util.FileUtils;
-import com.pi.connectraspberry.util.ImageSender;
+import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ImageUtil;
 import com.pi.connectraspberry.util.MyCommand;
 import com.pi.connectraspberry.util.ThreadUtil;
@@ -85,6 +76,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         ImageView ivSelect = findViewById(R.id.ivSelect);
         ImageView ivClassify = findViewById(R.id.ivClassify);
         ImageView ivConvert = findViewById(R.id.ivConvert);
+        ImageView ivCleanPic = findViewById(R.id.ivCleanPic);
         ivPreview = findViewById(R.id.ivPreview);
         ImageView ivPre = findViewById(R.id.ivPre);
         ImageView ivNext = findViewById(R.id.ivNext);
@@ -103,6 +95,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         ivNext.setOnClickListener(this);
         ivSetting.setOnClickListener(this);
         ivClassify.setOnClickListener(this);
+        ivCleanPic.setOnClickListener(this);
 
     }
 
@@ -435,6 +428,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
     int picNum = 1;
 
+
     @Override
     public void onClick(View view) {
 
@@ -446,24 +440,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
             case R.id.ivSend://发送图片
 
-                if (alreadyList == null || alreadyList.isEmpty()) {
-                    showToast(getResources().getString(R.string.no_pic));
-                    return;
-                }
-
-                picNum = 1;
-
-                ThreadUtil.getParallelExecutor().execute(() -> {
-
-                    String picName;
-
-                    for (String filePath : alreadyList) {
-                        picName = "Picture_" + picNum + ".bmp";
-                        picNum++;
-                        ImageSender.sendPic(picName, filePath);
-                    }
-
-                });
+                sendPic();
 
                 break;
 
@@ -472,6 +449,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 break;
 
             case R.id.ivConvert://转换
+                convertPic();
                 break;
 
             case R.id.tvSlide:
@@ -498,11 +476,82 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 hiddenPicPreView();
                 break;
 
+            case R.id.ivCleanPic://清理图片
+                clearPic();
+                break;
+
         }
     }
 
+    private void clearPic() {
+
+        ThreadUtil.getParallelExecutor().execute(clearPicRunnable);
+    }
+
+    private void sendPic() {
+        if (alreadyList == null || alreadyList.isEmpty()) {
+            showToast(getResources().getString(R.string.no_pic));
+            return;
+        }
+
+        showProgressDialog(getResources().getString(R.string.sending));
+        picNum = 1;
+
+        ThreadUtil.getParallelExecutor().execute(() -> {
+
+            String picName;
+
+            try {
+
+                for (String filePath : alreadyList) {
+                    picName = "Picture_" + picNum + ".bmp";
+                    picNum++;
+                    SocketSender.sendPic(picName, filePath);
+                }
+
+                runOnUiThread(() -> {
+                    hideProgressDialog();
+                    showToast(getResources().getString(R.string.send_success));
+                });
+
+            } catch (Exception e) {
+                //图片发送失败
+                e.printStackTrace();
+
+                runOnUiThread(() -> {
+                    hideProgressDialog();
+                    showToast(getResources().getString(R.string.send_fail) + e.getMessage());
+                });
+            }
+
+        });
+    }
+
+    /**
+     * 转换图片
+     */
+    private void convertPic() {
+        ThreadUtil.getParallelExecutor().execute(convertRunnable);
+    }
+
+    Runnable convertRunnable = () -> {
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CONVERT);
+        //showToast(b ? "发送成功" : "发送失败");
+        if (!b) {
+            noConnectStatus();
+        }
+    };
+
+    Runnable clearPicRunnable = () -> {
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CLEAR_PIC);
+        //showToast(b ? "发送成功" : "发送失败");
+        if (!b) {
+            noConnectStatus();
+        }
+    };
+
     Runnable autoRunnable = () -> {
-        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_AUTO);
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_AUTO);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();
@@ -510,7 +559,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     };
 
     Runnable preRunnable = () -> {
-        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_PRE);
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_PRE);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();
@@ -518,7 +567,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     };
 
     Runnable nextRunnable = () -> {
-        boolean b = ImageSender.sendCommand(MyCommand.COMMAND_NEXT);
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_NEXT);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();
@@ -590,7 +639,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
 
         try {
-            ImageSender.closeSocket();
+            SocketSender.closeSocket();
         } catch (Exception e) {
             e.printStackTrace();
         }

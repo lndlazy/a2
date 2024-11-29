@@ -25,4 +25,7 @@
     <string name="copy_failed">picture add fail</string>
     <string name="loading">loading</string>
     <string name="no_pic">no pictures</string>
+    <string name="sending">seding...</string>
+    <string name="send_success">send success</string>
+    <string name="send_fail">send fail !!!</string>
 </resources>

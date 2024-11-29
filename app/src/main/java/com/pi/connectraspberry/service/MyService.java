@@ -8,13 +8,12 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
 import com.pi.connectraspberry.R;
-import com.pi.connectraspberry.util.ImageSender;
+import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ThreadUtil;
 
 import org.greenrobot.eventbus.EventBus;
@@ -117,12 +116,12 @@ public class MyService extends Service {
     private Runnable connectRunnable = () -> {
 
         Log.d(TAG, "开始连接");
-        if (ImageSender.isConnect()) {
+        if (SocketSender.isConnect()) {
             sendConnectSuccess();
             return;
         }
 
-        boolean b = ImageSender.connectSocket(this::noConnect);
+        boolean b = SocketSender.connectSocket(this::noConnect);
 
         Log.d(TAG, "是否连接成功:" + b);
         if (b) {

@@ -1,13 +1,8 @@
 package com.pi.connectraspberry.ui;
 
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Intent;
-import android.database.Cursor;
-import android.media.Image;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -18,7 +13,6 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 
 import com.bumptech.glide.Glide;
 import com.pi.connectraspberry.R;
-import com.pi.connectraspberry.TestActivity;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
 import com.pi.connectraspberry.mlogger.MLogger;
 import com.pi.connectraspberry.util.FileUtils;
@@ -131,10 +125,7 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
         }
 
     }
-
     private static final int PICK_IMAGES = 32;
-
-
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
@@ -142,10 +133,9 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
         startActivityForResult(Intent.createChooser(intent, "Select Pictures"), PICK_IMAGES);
     }
 
-
     ProgressDialog progressDialog;
 
-    private void showProgressDialog() {
+    private void showLoadingDialog() {
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(this);
             progressDialog.setMessage(getResources().getString(R.string.loading));
@@ -154,7 +144,7 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
         progressDialog.show();
     }
 
-    private void hideProgressDialog() {
+    private void hideLoadingDialog() {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
@@ -169,27 +159,20 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 Log.d(TAG, "多张图片,数量:" + data.getClipData().getItemCount());
                 int count = data.getClipData().getItemCount();
 
-                hideProgressDialog();
-                showProgressDialog();
+                hideLoadingDialog();
+                showLoadingDialog();
                 try {
                     copyPicture(data, count);
                 } catch (Exception e) {
                     MLogger.e("复制图片失败:" + e.getMessage());
                     e.printStackTrace();
                 }
-                hideProgressDialog();
+                hideLoadingDialog();
             }
         }
 
         if (mAdapter != null)
             mAdapter.notifyDataSetChanged();
-
-
-//        if (alreadyList != null && alreadyList.size() > 0) {
-//            for (Uri uri : alreadyList) {
-//                Log.d(TAG, "图片地址:" + ImageUtil.getRealPathFromURI(context, uri));
-//            }
-//        }
 
     }
 
