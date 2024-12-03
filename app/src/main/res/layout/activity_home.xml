@@ -25,6 +25,7 @@
         android:layout_height="30dp"
         android:layout_marginTop="15dp"
         android:layout_marginRight="15dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:padding="2dp"
         android:src="@mipmap/ic_setting"
         app:layout_constraintRight_toRightOf="parent"
@@ -36,6 +37,7 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginRight="15dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:padding="2dp"
         android:src="@mipmap/ic_classify"
         app:layout_constraintRight_toLeftOf="@id/ivSetting"
@@ -82,6 +84,7 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginRight="15dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:padding="3dp"
         android:src="@mipmap/ic_clean_pic"
         app:layout_constraintBottom_toBottomOf="@id/clWifi"
@@ -93,7 +96,6 @@
         android:id="@+id/clSend"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         app:layout_constraintTop_toBottomOf="@id/clWifi">
 
         <ImageView

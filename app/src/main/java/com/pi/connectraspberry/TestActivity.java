@@ -23,6 +23,7 @@ import com.bumptech.glide.Glide;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
 import com.pi.connectraspberry.service.EventMsg;
 import com.pi.connectraspberry.service.MyService;
+import com.pi.connectraspberry.toast.ToastUtil;
 import com.pi.connectraspberry.ui.BaseActivity;
 import com.pi.connectraspberry.ui.ClassifyActivity;
 import com.pi.connectraspberry.ui.SettingActivity;
@@ -159,6 +160,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 break;
 
             case EventMsg.CONNECT_FAIL_STATUS:// 显示连接失败状态
+                showToast(getResources().getString(R.string.connect_lost));
                 noConnectStatus();
                 break;
 
@@ -192,6 +194,9 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
     public void connectSuccessStatus() {
 
+        hideProgressDialog();
+
+        ToastUtil.show(getResources().getString(R.string.connect_success)) ;
         if (CommUtils.isMainLooper()) {
             showPic(ivWifi, R.mipmap.ic_wifi_blue);
 
@@ -204,6 +209,8 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
     //未连接状态
     private void noConnectStatus() {
+
+        hideProgressDialog();
 
         if (CommUtils.isMainLooper()) {
             showPic(ivWifi, R.mipmap.ic_wifi_gray);
@@ -435,7 +442,9 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         switch (view.getId()) {
 
             case R.id.clWifi://连接wifi
+                showProgressDialog(getResources().getString(R.string.connecting));
                 connectSocket();
+//                showToast(" connect wifi ");
                 break;
 
             case R.id.ivSend://发送图片
@@ -504,7 +513,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
             try {
 
                 for (String filePath : alreadyList) {
-                    picName = "Picture_" + picNum + ".bmp";
+                    picName = "picture_" + picNum + ".bmp";
                     picNum++;
                     SocketSender.sendPic(picName, filePath);
                 }

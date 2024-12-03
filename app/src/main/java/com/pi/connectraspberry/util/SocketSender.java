@@ -5,7 +5,9 @@ import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.alibaba.fastjson.JSONObject;
 import com.pi.connectraspberry.MyApplication;
+import com.pi.connectraspberry.bean.ConfigBean;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -41,6 +43,9 @@ public class SocketSender {
 
     static volatile long lastReceiveTime = System.currentTimeMillis();
 
+
+    static int disconnectCount = 0;
+
     /**
      * 接受消息
      */
@@ -60,16 +65,19 @@ public class SocketSender {
 
                     if (System.currentTimeMillis() - lastReceiveTime > TIME_OUT * 1000) {
                         Log.e(TAG, " 超时   断开连接 ????   ");
+                        disconnectCount++;
                     }
 
-//                    if (read3 == -1) {
-////                        Log.d(TAG, "read3 等于-1  ====>" + read3);
-//                        continue;
-//                    }
-
-//                    if (available > 0) {
+                    if (disconnectCount > 3) {
+                        Log.e(TAG, "  超过三次，断开连接   ");
+                        closeSocket();
+                        if (socketListener != null)
+                            socketListener.onConnectLost();
+                        return;
+                    }
 
                     if (read3 > 0) {
+                        disconnectCount = 0;
                         //接受到了消息
                         lastReceiveTime = System.currentTimeMillis();
                         String messageFromServer = new String(cmdTypeBuffer);
@@ -82,7 +90,22 @@ public class SocketSender {
                             continue;
                         }
 
-                        if (MyCommand.CMD_IMG.equals(messageFromServer)) {//图片指令
+                        if (MyCommand.HEART.equals(messageFromServer)) {
+                            Log.d(TAG, "心跳 -> " + new Date().toLocaleString());
+
+                        } else if (MyCommand.CMD_TOA.equals(messageFromServer)) {
+                            //吐司
+                            byte[] lengthBuffer = new byte[4];
+                            int r = is.read(lengthBuffer);
+                            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
+                            // 接收图片数据
+                            byte[] cmdBuffer = new byte[cmdLength];
+                            int read2 = is.read(cmdBuffer);
+                            String notice = new String(cmdBuffer);
+                            Log.d(TAG, "发送eventbus=>" + notice);
+                            EventBus.getDefault().post("back:" + notice);
+
+                        } else if (MyCommand.CMD_IMG.equals(messageFromServer)) {//图片指令
 
                             //接受文件名长度
                             byte[] nameLen = new byte[4];
@@ -109,33 +132,30 @@ public class SocketSender {
                             Bitmap bitmap = BitmapFactory.decodeByteArray(imageBuffer, 0, imageBuffer.length);
                             ImageUtil.saveImageToGallery(MyApplication.getInstance(), bitmap, fileName);
 
-
                         } else if (MyCommand.CMD_CMD.equals(messageFromServer)) {
                             // 接收指令数据长度
-                            long l1 = System.currentTimeMillis();
+                            //long l1 = System.currentTimeMillis();
                             byte[] lengthBuffer = new byte[4];
-                            long l2 = System.currentTimeMillis();
+                            // long l2 = System.currentTimeMillis();
                             int r = is.read(lengthBuffer);
-                            long l3 = System.currentTimeMillis();
+//                            long l3 = System.currentTimeMillis();
                             //Log.d(TAG, "r====>" + r);
                             int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
-                            long l4 = System.currentTimeMillis();
+//                            long l4 = System.currentTimeMillis();
                             //Log.d(TAG, "指令长度cmdLength====>" + cmdLength);
                             // 接收图片数据
                             byte[] cmdBuffer = new byte[cmdLength];
                             int read2 = is.read(cmdBuffer);
-                            long l5 = System.currentTimeMillis();
+//                            long l5 = System.currentTimeMillis();
                             String cmd = new String(cmdBuffer);
-                            long l6 = System.currentTimeMillis();
+//                            long l6 = System.currentTimeMillis();
                             //Log.d(TAG, " 指令内容:: " + cmd);
 
-                            if ("HEART".equals(cmd)) {
-                                Log.d(TAG, "心跳 -> " + new Date().toLocaleString() + ",时间间隔" + (l2 - l1) + "," + (l3 - l2) + "," + (l4 - l3) + "," + (l5 - l4) + "," + (l6 - l5) + "," + (l6 - l1));
-                            } else {
+//                            if ("HEART".equals(cmd)) {
+//                                Log.d(TAG, "心跳 -> " + new Date().toLocaleString() + ",时间间隔" + (l2 - l1) + "," + (l3 - l2) + "," + (l4 - l3) + "," + (l5 - l4) + "," + (l6 - l5) + "," + (l6 - l1));
+//                            } else {
 
-                                Log.d(TAG, "发送eventbus");
-                                EventBus.getDefault().post("back:" + cmd);
-                            }
+//                            }
 
                         }
 
@@ -162,6 +182,7 @@ public class SocketSender {
             if (timer == null)
                 timer = new Timer();
 
+            disconnectCount = 0;
 //            InputStream is = socket.getInputStream();
             is = socket.getInputStream();
 
@@ -169,7 +190,7 @@ public class SocketSender {
             String phoneInfo = CommUtils.getPhoneInfo();
             Log.d(TAG, "手机信息:" + phoneInfo);
 
-            sendCommand("mobile:" + phoneInfo);
+            sendCommand(MyCommand.mobileInfo + phoneInfo);
 //            dos.write(("STR:mobile:" + phoneInfo).getBytes(StandardCharsets.UTF_8));
 
             lastReceiveTime = System.currentTimeMillis();
@@ -254,15 +275,15 @@ public class SocketSender {
     /**
      * 发送指令
      *
-     * @param commandConvert
+     * @param msg
      */
-    public static boolean sendCommand(String commandConvert) {
+    public static boolean sendCommand(String msg) {
 
         if (!isConnect())
             return false;
 
         try {
-            if (TextUtils.isEmpty(commandConvert))
+            if (TextUtils.isEmpty(msg))
                 return false;
 
             OutputStream outputStream = socket.getOutputStream();
@@ -270,9 +291,9 @@ public class SocketSender {
             //命令开始
             outputStream.write(MyCommand.CMD_START.getBytes(StandardCharsets.UTF_8));
             //指令长度
-            outputStream.write(longToByteArray(commandConvert.length()));
+            outputStream.write(longToByteArray(msg.length()));
             //指令内容
-            outputStream.write(commandConvert.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(msg.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
             return true;
         } catch (Exception e) {
@@ -281,6 +302,31 @@ public class SocketSender {
         }
 
     }
+
+    public static boolean sendConfig() {
+
+        try {
+
+            ConfigBean configBean = new ConfigBean();
+            configBean.setSeconds(SpUtils.getConfig(SpUtils.PLAY_INTERVAL, 0));
+            configBean.setHue(SpUtils.getConfig(SpUtils.HUE, 0));
+            configBean.setSat(SpUtils.getConfig(SpUtils.SAT, 0));
+            configBean.setBright(SpUtils.getConfig(SpUtils.BRIGHT, 0));
+            configBean.setContrast(SpUtils.getConfig(SpUtils.CONTRAST, 0));
+            configBean.setAuto(true);
+
+            String jsonString = JSONObject.toJSONString(configBean);
+            Log.d(TAG, "发送的配置信息:" + jsonString);
+            return sendCommand(MyCommand.configInfo + jsonString);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
 
     public static void closeSocket() {
 

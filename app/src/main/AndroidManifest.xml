@@ -10,6 +10,8 @@
     <!--android 9.0上使用前台服务，需要添加权限-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.SHOW_KEYBOARD" />
+
 
     <application
         android:name=".MyApplication"

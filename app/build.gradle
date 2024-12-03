@@ -46,10 +46,11 @@ dependencies {
     implementation 'pub.devrel:easypermissions:3.0.0'
     implementation 'com.github.JessYanCoding:AndroidAutoSize:v1.2.1'
     implementation 'com.github.li-xiaojun:XPopup:2.10.0'
-
+    //implementation 'com.blankj:utilcode:1.34.0'
     implementation 'com.orhanobut:logger:2.2.0'
 
     implementation 'org.greenrobot:eventbus:3.3.1'
+    implementation 'com.alibaba:fastjson:1.2.78'
 
 //    implementation 'com.github.vilyever:AndroidSocketClient:3.0.3'
 }

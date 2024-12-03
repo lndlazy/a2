@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.pi.connectraspberry.R;
+import com.pi.connectraspberry.toast.ToastUtil;
 import com.pi.connectraspberry.util.CommUtils;
 
 public abstract class BaseActivity extends AppCompatActivity {
@@ -67,9 +68,12 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void showToast(String msg) {
 
         if (CommUtils.isMainLooper()) {
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+
+            ToastUtil.show(msg);
+//            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
         } else
-            runOnUiThread(() -> Toast.makeText(context, msg, Toast.LENGTH_SHORT).show());
+            runOnUiThread(() -> ToastUtil.show(msg));
+        // Toast.makeText(context, msg, Toast.LENGTH_SHORT).show());
 
     }
 

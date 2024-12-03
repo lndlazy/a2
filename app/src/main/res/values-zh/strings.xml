@@ -1,4 +1,62 @@
 <resources>
+
     <string name="app_name">A2 Convert</string>
-    <string name="classify">分类</string>
+    <string name="classify">classify</string>
+    <string name="home_connect">1.Connect</string>
+    <string name="home_send">3.Send</string>
+    <string name="home_select">2.Select</string>
+    <string name="home_convert">4.Convert</string>
+    <string name="auto_slide_show">Auto Slide Show</string>
+    <string name="setting">setting</string>
+    <string name="add_new_classify">new classify</string>
+    <string name="please_enter_name">please input name</string>
+    <string name="add_classify_success">add classify success</string>
+    <string name="attention">note</string>
+    <string name="are_sure_show">are you sure show \'</string>
+    <string name="are_sure_show_after">\' folder pictures</string>
+    <string name="illegal_character">illegal character</string>
+    <string name="add_classify_fail">add fail!</string>
+    <string name="delete_failed">delete fail!</string>
+    <string name="delete_success">delete success</string>
+    <string name="most_nine">最多只能选择9张图片</string>
+    <string name="hasno_pic">图片地址为空</string>
+    <string name="are_sure_delete">are you sure to delete\'</string>
+    <string name="are_sure_delete_after">\' the folder and pictures</string>
+    <string name="folder_not_exist">file not exist</string>
+    <string name="copy_failed">picture add fail</string>
+    <string name="loading">loading</string>
+    <string name="no_pic">no pictures</string>
+    <string name="sending">seding...</string>
+    <string name="send_success">send success</string>
+    <string name="send_fail">send fail !!!</string>
+    <string name="connect_lost">connect fail</string>
+    <string name="connecting">connecting</string>
+    <string name="connect_success">connect success</string>
+    <string name="switching_time">Switching Time</string>
+    <string name="hue_offset">hue offset</string>
+    <string name="sat_offset">sat offset</string>
+    <string name="bright_offset">bright offset</string>
+    <string name="contrast_offset">contrast offset</string>
+    <string name="confirm">confirm</string>
+    <string name="cancel">cancel</string>
+    <string name="ok">ok</string>
+    <string name="input_empty">Please enter the content</string>
+    <string name="input_range">The input content is in</string>
+    <string name="input_error">Illegal input</string>
+    <string name="set_play_interval">Set playback duration</string>
+    <string name="play_interval_msg">最低时间间隔为60秒</string>
+    <string name="set_sat_msg">饱和度-100~100</string>
+    <string name="set_sat">饱和度调节</string>
+    <string name="set_hue">色调调节</string>
+    <string name="set_hue_msg">色调调整偏移范围为0至360</string>
+    <string name="set_contrast_msg">对比度调整偏移在-100到100的范围内</string>
+    <string name="set_contrast">对比度调节</string>
+    <string name="set_bright">亮度调节</string>
+    <string name="set_bright_msg">亮度调节偏移范围为-100至100</string>
+    <string name="reset">重置</string>
+    <string name="reset_confirm">确定要重置配置吗</string>
+    <string name="set_success">设置成功</string>
+    <string name="set_fail">设置失败</string>
+
+
 </resources>
