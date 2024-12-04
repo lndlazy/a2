@@ -23,11 +23,13 @@ import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.pi.connectraspberry.R;
+import com.pi.connectraspberry.bean.ConfigBean;
 import com.pi.connectraspberry.util.DensityUtil;
 import com.pi.connectraspberry.util.FileUtils;
 import com.pi.connectraspberry.util.MyCommand;
 import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.SpUtils;
+import com.pi.connectraspberry.util.ThreadUtil;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +49,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private int sat;//饱和度调整范围为-100至100
     private int bright;//亮度调整范围为-100至100
     private int contrast;//对比度调整范围为-100至100
+    private boolean auto;//是否是自动切换模式
+    private TextView tvMode;//自动、手动模式
 
 
     @Override
@@ -63,6 +67,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         ivBack.setOnClickListener(v -> finish());
 
         TextView tvReset = findViewById(R.id.tvReset);
+        tvMode = findViewById(R.id.tvMode);
 
         tvTime = findViewById(R.id.tvTime);
         tvHue = findViewById(R.id.tvHue);
@@ -75,6 +80,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         ConstraintLayout clSat = findViewById(R.id.clSat);
         ConstraintLayout clBright = findViewById(R.id.clBright);
         ConstraintLayout clContrast = findViewById(R.id.clContrast);
+        ConstraintLayout clSwitch = findViewById(R.id.clSwitch);
 
         clTime.setOnClickListener(this);
         clHue.setOnClickListener(this);
@@ -82,6 +88,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         clBright.setOnClickListener(this);
         clContrast.setOnClickListener(this);
         tvReset.setOnClickListener(this);
+        clSwitch.setOnClickListener(this);
 
     }
 
@@ -93,12 +100,14 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         sat = SpUtils.getConfig(SpUtils.SAT, 0);
         bright = SpUtils.getConfig(SpUtils.BRIGHT, 0);
         contrast = SpUtils.getConfig(SpUtils.CONTRAST, 0);
+        auto = SpUtils.getBoolean(SpUtils.SWITCH, true);
 
         tvTime.setText(seconds + "s");
         tvHue.setText(hue + "");
         tvSat.setText(sat + "");
         tvBright.setText(bright + "");
         tvContrast.setText(contrast + "");
+        tvMode.setText(auto ? getResources().getString(R.string.automatic_mode) : getResources().getString(R.string.manual_mode));
 
     }
 
@@ -132,13 +141,33 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 setPicPlayTimes();
                 break;
 
+            case R.id.clSwitch:
+                //模式切换
+                modeSwitch();
+                break;
+
             case R.id.tvReset:
                 //重置設置
                 resetConfig();
                 break;
 
+
         }
 
+    }
+
+    /**
+     * 模式切换
+     */
+    private void modeSwitch() {
+
+        new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(auto ? R.string.switch_to_manual : R.string.switch_to_auto), new OnConfirmListener() {
+            @Override
+            public void onConfirm() {
+                //toast("click confirm");
+                syncConfig2Raspberry(SpUtils.SWITCH, auto ? 1 : 0);
+            }
+        }).show();
     }
 
     /**
@@ -146,33 +175,14 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
      */
     private void resetConfig() {
 
-        new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.reset_confirm),
-                        new OnConfirmListener() {
-                            @Override
-                            public void onConfirm() {
-                                //toast("click confirm");
-                                SpUtils.putConfig(SpUtils.PLAY_INTERVAL, 60);
-                                SpUtils.putConfig(SpUtils.HUE, 0);
-                                SpUtils.putConfig(SpUtils.SAT, 0);
-                                SpUtils.putConfig(SpUtils.BRIGHT, 0);
-                                SpUtils.putConfig(SpUtils.CONTRAST, 0);
+        new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.reset_confirm), new OnConfirmListener() {
+            @Override
+            public void onConfirm() {
+                //toast("click confirm");
 
-                                seconds = 60;
-                                hue = 0;
-                                sat = 0;
-                                bright = 0;
-                                contrast = 0;
-
-                                tvTime.setText(60 + "s");
-                                tvHue.setText(0 + "");
-                                tvSat.setText(0 + "");
-                                tvBright.setText(0 + "");
-                                tvContrast.setText(0 + "");
-
-                                syncConfig2Raspberry();
-                            }
-                        })
-                .show();
+                syncConfig2Raspberry("reset", 0);
+            }
+        }).show();
 
     }
 
@@ -182,25 +192,154 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private void setPicPlayTimes() {
 
         showEditConfig(getResources().getString(R.string.set_play_interval), seconds, 60, 999, getResources().getString(R.string.play_interval_msg), value -> {
-            seconds = value;
-            SpUtils.putConfig(SpUtils.PLAY_INTERVAL, seconds);
-            syncConfig2Raspberry();
-            tvTime.setText(seconds + "s");
+
+            syncConfig2Raspberry(SpUtils.PLAY_INTERVAL, value);
+
         });
     }
 
-    private void syncConfig2Raspberry() {
-
+    private void syncConfig2Raspberry(String type, int value) {
         //通知raspberry pi更新配置
-        boolean b = SocketSender.sendConfig();
+//        ThreadUtil.getParallelExecutor().execute(configRunnable);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
 
-        if (b) {
-            showToast(getResources().getString(R.string.set_success));
-        } else {
-            showToast(getResources().getString(R.string.set_fail));
-        }
+                boolean b = SocketSender.sendConfig(getConfigBean(type, value));
+
+                if (b) {
+                    runOnUiThread(() -> setNowValue(type, value));
+                } else {
+                    showToast(getResources().getString(R.string.set_fail));
+                }
+
+            }
+        }).start();
 
     }
+
+    private ConfigBean getConfigBean(String type, int value) {
+
+        ConfigBean configBean = new ConfigBean();
+        configBean.setSeconds(SpUtils.getConfig(SpUtils.PLAY_INTERVAL, 60));
+        configBean.setHue(SpUtils.getConfig(SpUtils.HUE, 0));
+        configBean.setSat(SpUtils.getConfig(SpUtils.SAT, 0));
+        configBean.setBright(SpUtils.getConfig(SpUtils.BRIGHT, 0));
+        configBean.setContrast(SpUtils.getConfig(SpUtils.CONTRAST, 0));
+        configBean.setAuto(SpUtils.getBoolean(SpUtils.SWITCH, true));//0是自动， 1是手动
+
+        switch (type) {
+            case SpUtils.SAT:
+                configBean.setSat(value);
+                break;
+            case SpUtils.HUE:
+                configBean.setHue(value);
+                break;
+            case SpUtils.BRIGHT:
+                configBean.setBright(value);
+                break;
+            case SpUtils.CONTRAST:
+                configBean.setContrast(value);
+                break;
+            case SpUtils.PLAY_INTERVAL:
+                configBean.setSeconds(value);
+                break;
+            case SpUtils.SWITCH:
+                configBean.setAuto(value == 0);
+                break;
+            case "reset":
+                configBean.setSeconds(60);
+                configBean.setHue(0);
+                configBean.setSat(0);
+                configBean.setBright(0);
+                configBean.setContrast(0);
+                configBean.setAuto(true);
+                break;
+        }
+
+        return configBean;
+    }
+
+
+    private void setNowValue(String type, int value) {
+
+        showToast(getResources().getString(R.string.set_success));
+
+        switch (type) {
+
+            case SpUtils.SAT:
+                sat = value;
+                SpUtils.putConfig(SpUtils.SAT, sat);
+                tvSat.setText(sat + "");
+                break;
+
+            case SpUtils.HUE:
+                hue = value;
+                SpUtils.putConfig(SpUtils.HUE, hue);
+                tvHue.setText(hue + "");
+                break;
+
+            case SpUtils.BRIGHT:
+                bright = value;
+                SpUtils.putConfig(SpUtils.BRIGHT, bright);
+                tvBright.setText(bright + "");
+                break;
+
+            case SpUtils.CONTRAST:
+                contrast = value;
+                SpUtils.putConfig(SpUtils.CONTRAST, contrast);
+                tvContrast.setText(contrast + "");
+                break;
+
+            case SpUtils.PLAY_INTERVAL:
+                seconds = value;
+                SpUtils.putConfig(SpUtils.PLAY_INTERVAL, seconds);
+                tvTime.setText(seconds + "s");
+                break;
+
+            case SpUtils.SWITCH:
+                auto = value == 0;
+                SpUtils.putBoolean(SpUtils.SWITCH, auto);
+                tvMode.setText(auto ? getResources().getString(R.string.automatic_mode) : getResources().getString(R.string.manual_mode));
+                break;
+
+            case "reset":
+                SpUtils.putConfig(SpUtils.PLAY_INTERVAL, 60);
+                SpUtils.putConfig(SpUtils.HUE, 0);
+                SpUtils.putConfig(SpUtils.SAT, 0);
+                SpUtils.putConfig(SpUtils.BRIGHT, 0);
+                SpUtils.putConfig(SpUtils.CONTRAST, 0);
+                SpUtils.putBoolean(SpUtils.SWITCH, true);
+
+                seconds = 60;
+                hue = 0;
+                sat = 0;
+                bright = 0;
+                contrast = 0;
+                auto = true;
+
+                tvTime.setText(60 + "s");
+                tvHue.setText(0 + "");
+                tvSat.setText(0 + "");
+                tvBright.setText(0 + "");
+                tvContrast.setText(0 + "");
+                tvMode.setText(auto ? getResources().getString(R.string.automatic_mode) : getResources().getString(R.string.manual_mode));
+
+                break;
+        }
+    }
+
+
+//    Runnable configRunnable = () -> {
+//        boolean b = SocketSender.sendConfig();
+//
+//        if (b) {
+//            showToast(getResources().getString(R.string.set_success));
+//        } else {
+//            showToast(getResources().getString(R.string.set_fail));
+//        }
+//    };
+
 
     /**
      * 饱和度调整范围为-100至100
@@ -208,10 +347,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private void setPicSat() {
 
         showEditConfig(getResources().getString(R.string.set_sat), sat, -100, 100, getResources().getString(R.string.set_sat_msg), value -> {
-            sat = value;
-            SpUtils.putConfig(SpUtils.SAT, sat);
-            tvSat.setText(sat + "");
-            syncConfig2Raspberry();
+
+            syncConfig2Raspberry(SpUtils.SAT, value);
         });
     }
 
@@ -221,10 +358,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private void setPicHue() {
 
         showEditConfig(getResources().getString(R.string.set_hue), hue, 0, 360, getResources().getString(R.string.set_hue_msg), value -> {
-            hue = value;
-            SpUtils.putConfig(SpUtils.HUE, hue);
-            tvHue.setText(hue + "");
-            syncConfig2Raspberry();
+
+            syncConfig2Raspberry(SpUtils.HUE, value);
         });
 
     }
@@ -235,10 +370,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private void setPicContrast() {
 
         showEditConfig(getResources().getString(R.string.set_contrast), contrast, -100, 100, getResources().getString(R.string.set_contrast_msg), value -> {
-            contrast = value;
-            SpUtils.putConfig(SpUtils.CONTRAST, contrast);
-            tvContrast.setText(contrast + "");
-            syncConfig2Raspberry();
+
+            syncConfig2Raspberry(SpUtils.CONTRAST, value);
         });
     }
 
@@ -248,10 +381,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private void setPicBright() {
 
         showEditConfig(getResources().getString(R.string.set_bright), bright, -100, 100, getResources().getString(R.string.set_bright_msg), value -> {
-            bright = value;
-            SpUtils.putConfig(SpUtils.BRIGHT, bright);
-            tvBright.setText(bright + "");
-            syncConfig2Raspberry();
+
+            syncConfig2Raspberry(SpUtils.BRIGHT, value);
         });
 
     }
@@ -300,8 +431,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 return;
             }
 
-            if (listener != null)
-                listener.onConfig(Integer.parseInt(etInput.getText().toString()));
+            if (listener != null) listener.onConfig(Integer.parseInt(etInput.getText().toString()));
 
             hiddenConfigDialog(dialog);
         });

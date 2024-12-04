@@ -12,6 +12,7 @@ import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.pi.connectraspberry.R;
 import com.pi.connectraspberry.callback.MyItemAnimator;
 import com.pi.connectraspberry.util.FileUtils;
+import com.pi.connectraspberry.util.SocketSender;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -78,13 +79,39 @@ public class ClassifyActivity extends BaseActivity {
                                 }
 
                                 boolean success = FileUtils.createFile(text);
-                                if (success)
-                                    showToast(getResources().getString(R.string.add_classify_success));
-                                else
-                                    showToast(getResources().getString(R.string.add_classify_fail));
 
-                                folderList.add(text);
-                                mAdapter.notifyDataSetChanged();
+                                if (!success) {
+                                    showToast(getResources().getString(R.string.add_classify_fail));
+                                    return;
+                                }
+
+                                //通知raspberry创建文件夹
+                                new Thread(() -> {
+                                    try {
+
+                                        boolean b = SocketSender.sendCreateFolder(text);
+                                        Log.d(TAG, "sendCreateFolder: " + b);
+                                        if (b) {
+
+                                            runOnUiThread(() -> {
+                                                showToast(getResources().getString(R.string.add_classify_success));
+                                                folderList.add(text);
+                                                mAdapter.notifyDataSetChanged();
+                                            });
+                                        } else {
+                                            showToast(getResources().getString(R.string.add_classify_fail));
+                                        }
+
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }).start();
+
+//                                if (success)
+//                                    showToast(getResources().getString(R.string.add_classify_success));
+//                                else
+//                                    showToast(getResources().getString(R.string.add_classify_fail));
+
 
                             }
                         })
@@ -128,7 +155,6 @@ public class ClassifyActivity extends BaseActivity {
 
         recyclerView.setOnItemChildClickListener((view, position) -> {
             Log.e("TAG", "onItemChildClick: " + position);
-
 
             switch (view.getId()) {
                 case R.id.ivChoose:
@@ -174,9 +200,30 @@ public class ClassifyActivity extends BaseActivity {
 
                                 int i = FileUtils.deleteDirectory(new File(FileUtils.getLocalBasePath() + name));
                                 if (i == 0) {
-                                    showToast(getResources().getString(R.string.delete_success));
-                                    folderList.remove(name);
-                                    mAdapter.notifyDataSetChanged();
+
+                                    //通知raspberry删除文件夹
+                                    new Thread(() -> {
+                                        try {
+
+                                            boolean b = SocketSender.sendDeleteFolder(name);
+                                            Log.d(TAG, "sendCreateFolder: " + b);
+                                            if (b) {
+
+                                                runOnUiThread(() -> {
+                                                    showToast(getResources().getString(R.string.delete_success));
+                                                    folderList.remove(name);
+                                                    mAdapter.notifyDataSetChanged();
+                                                });
+                                            } else {
+                                                showToast(getResources().getString(R.string.delete_failed));
+                                            }
+
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }).start();
+
+
                                 } else if (i == -1) {
                                     showToast(getResources().getString(R.string.folder_not_exist));
                                 } else if (i == -2) {

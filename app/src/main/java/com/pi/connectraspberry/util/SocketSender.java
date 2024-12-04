@@ -61,7 +61,7 @@ public class SocketSender {
                     byte[] cmdTypeBuffer = new byte[9];
                     int read3 = is.read(cmdTypeBuffer);
                     long l01 = System.currentTimeMillis();
-                    Log.d(TAG, "read3的长度:" + read3 + ",时间间隔:" + (l01 - l00));
+                    //Log.d(TAG, "read3的长度:" + read3 + ",时间间隔:" + (l01 - l00));
 
                     if (System.currentTimeMillis() - lastReceiveTime > TIME_OUT * 1000) {
                         Log.e(TAG, " 超时   断开连接 ????   ");
@@ -77,21 +77,24 @@ public class SocketSender {
                     }
 
                     if (read3 > 0) {
-                        disconnectCount = 0;
-                        //接受到了消息
-                        lastReceiveTime = System.currentTimeMillis();
+
                         String messageFromServer = new String(cmdTypeBuffer);
 
 //                        Log.d(TAG, "接受到了消息:" + messageFromServer + "读取间隔:" + (ssT2 - ssT1) + ",当前时间:" + new Date().toLocaleString() + ",上次" + new Date(lastReceiveTime).toLocaleString());
-                        Log.d(TAG, "接受到了消息:" + messageFromServer);
 
                         if (TextUtils.isEmpty(messageFromServer) || TextUtils.isEmpty(messageFromServer.trim())) {
                             // SystemClock.sleep(1000);
                             continue;
                         }
 
+                        disconnectCount = 0;
+                        //接受到了消息
+                        lastReceiveTime = System.currentTimeMillis();
+                        if (!"CMD_HEART".equals(messageFromServer))
+                            Log.d(TAG, "接受到了消息:" + messageFromServer);
+
                         if (MyCommand.HEART.equals(messageFromServer)) {
-                            Log.d(TAG, "心跳 -> " + new Date().toLocaleString());
+                            //Log.d(TAG, "心跳 -> " + new Date().toLocaleString());
 
                         } else if (MyCommand.CMD_TOA.equals(messageFromServer)) {
                             //吐司
@@ -174,6 +177,7 @@ public class SocketSender {
     public static boolean connectSocket(SocketListener listener) {
 
         try {
+
             socketListener = listener;
 
             if (socket == null)
@@ -303,23 +307,36 @@ public class SocketSender {
 
     }
 
-    public static boolean sendConfig() {
+    public static boolean sendConfig(ConfigBean configBean) {
 
         try {
-
-            ConfigBean configBean = new ConfigBean();
-            configBean.setSeconds(SpUtils.getConfig(SpUtils.PLAY_INTERVAL, 0));
-            configBean.setHue(SpUtils.getConfig(SpUtils.HUE, 0));
-            configBean.setSat(SpUtils.getConfig(SpUtils.SAT, 0));
-            configBean.setBright(SpUtils.getConfig(SpUtils.BRIGHT, 0));
-            configBean.setContrast(SpUtils.getConfig(SpUtils.CONTRAST, 0));
-            configBean.setAuto(true);
 
             String jsonString = JSONObject.toJSONString(configBean);
             Log.d(TAG, "发送的配置信息:" + jsonString);
             return sendCommand(MyCommand.configInfo + jsonString);
 
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
 
+    }
+
+
+    public static boolean sendCreateFolder(String fileName) {
+
+        try {
+            return sendCommand(MyCommand.createFolder + fileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+    public static boolean sendDeleteFolder(String fileName) {
+
+        try {
+            return sendCommand(MyCommand.deleteFolder + fileName);
         } catch (Exception e) {
             e.printStackTrace();
             return false;

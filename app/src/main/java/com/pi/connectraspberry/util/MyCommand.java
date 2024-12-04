@@ -11,6 +11,8 @@ public interface MyCommand {
 
     String mobileInfo = "mobile:";
     String configInfo = "config:";
+    String createFolder = "createFolder:";
+    String deleteFolder = "deleteFolder:";
 
 
     String COMMAND_CONVERT = "CONVERT";

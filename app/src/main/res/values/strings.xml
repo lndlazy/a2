@@ -56,4 +56,9 @@
     <string name="reset_confirm">are you sure to reset config</string>
     <string name="set_success">set success</string>
     <string name="set_fail">set fail</string>
+    <string name="automatic_mode">Automatic mode</string>
+    <string name="manual_mode">Manual mode</string>
+    <string name="switch_to_auto">Switch to automatic mode</string>
+    <string name="switch_to_manual">Switch to manual mode</string>
+
 </resources>

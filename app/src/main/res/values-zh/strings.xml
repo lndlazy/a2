@@ -57,6 +57,10 @@
     <string name="reset_confirm">确定要重置配置吗</string>
     <string name="set_success">设置成功</string>
     <string name="set_fail">设置失败</string>
+    <string name="automatic_mode">自动模式</string>
+    <string name="manual_mode">手动模式</string>
+    <string name="switch_to_auto">切换到自动模式</string>
+    <string name="switch_to_manual">切换到手动模式</string>
 
 
 </resources>
