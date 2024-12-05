@@ -98,6 +98,7 @@ public class ClassifyActivity extends BaseActivity {
                                                 folderList.add(text);
                                                 mAdapter.notifyDataSetChanged();
                                             });
+
                                         } else {
                                             showToast(getResources().getString(R.string.add_classify_fail));
                                         }
@@ -111,7 +112,6 @@ public class ClassifyActivity extends BaseActivity {
 //                                    showToast(getResources().getString(R.string.add_classify_success));
 //                                else
 //                                    showToast(getResources().getString(R.string.add_classify_fail));
-
 
                             }
                         })

@@ -252,7 +252,7 @@ public class GithubActivity extends AppCompatActivity {
             try {
                 for (Uri uri : alreadyList) {
                     String realPathFromURI = ImageUtil.getRealPathFromURI(context, uri);
-                    boolean b = SocketSender.sendPic("", realPathFromURI);
+                    boolean b = SocketSender.sendPic("","", realPathFromURI);
                     SystemClock.sleep(1000);
                     showToast(b ? "发送成功" : "发送失败");
                 }

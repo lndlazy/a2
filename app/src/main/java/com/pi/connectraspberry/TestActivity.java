@@ -515,7 +515,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 for (String filePath : alreadyList) {
                     picName = "picture_" + picNum + ".bmp";
                     picNum++;
-                    SocketSender.sendPic(picName, filePath);
+                    SocketSender.sendPic(" ", picName, filePath);
                 }
 
                 runOnUiThread(() -> {

@@ -3,6 +3,7 @@ package com.pi.connectraspberry.ui;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -13,14 +14,25 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 
 import com.bumptech.glide.Glide;
 import com.pi.connectraspberry.R;
+import com.pi.connectraspberry.bean.FolderBean;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
 import com.pi.connectraspberry.mlogger.MLogger;
+import com.pi.connectraspberry.service.EventMsg;
 import com.pi.connectraspberry.util.FileUtils;
 import com.pi.connectraspberry.util.ImageUtil;
+import com.pi.connectraspberry.util.MD5Util;
+import com.pi.connectraspberry.util.MyCommand;
+import com.pi.connectraspberry.util.SocketSender;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import me.jingbin.library.ByRecyclerView;
 import me.jingbin.library.adapter.BaseByViewHolder;
@@ -33,9 +45,13 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
     private static final String TAG = "ClassifyDetail";
     private ByRecyclerView recyclerView;
-    private ImageView ivPreview;
+    private ImageView ivPreview, ivSend;
     protected List<String> alreadyList = new ArrayList<>();
     private String classifyName;
+
+
+    //key:md5值, value:文件路径
+    private Map<String, String> appMd5Map = new LinkedHashMap<>();
 
     @Override
     protected int getLayoutId() {
@@ -47,7 +63,6 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
         ivPreview = findViewById(R.id.ivPreview);
 
-
         classifyName = getIntent().getStringExtra("classifyName");
         Log.d(TAG, "分类名称: " + classifyName);
         TextView tvTop = findViewById(R.id.tvTop);
@@ -55,10 +70,12 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
         ImageView ivBack = findViewById(R.id.ivBack);
         ImageView ivAdd = findViewById(R.id.ivAdd);
+        ImageView ivSend = findViewById(R.id.ivSend);
         ivBack.setOnClickListener(v -> finish());
 
         ivPreview.setOnClickListener(this);
         ivAdd.setOnClickListener(this);
+        ivSend.setOnClickListener(this);
 
         initRecyclerView();
 
@@ -68,47 +85,44 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
     @Override
     protected void initData() {
 
+        EventBus.getDefault().register(this);
         queryImagesInDirectory(FileUtils.getLocalBasePath() + classifyName);
         mAdapter.notifyDataSetChanged();
+
+        new Thread(() -> SocketSender.getFolderImgs(classifyName)).start();
 
     }
 
 
     private void queryImagesInDirectory(String targetDirectory) {
 
-        List<String> bmpImages = ImageUtil.findBMPImages(targetDirectory);
+        File directory = new File(targetDirectory);
+        if (directory.exists() && directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (isBMPFile(file)) {
+                        alreadyList.add(file.getAbsolutePath());
+                        String md5 = MD5Util.getMD5(file);
+                        appMd5Map.put(md5, file.getAbsolutePath());
 
-        alreadyList.addAll(bmpImages);
+                    }
+                }
+            }
+        }
 
+    }
 
-//        ContentResolver contentResolver = getContentResolver();
-//        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-//        String[] projection = {MediaStore.Images.Media.DATA};
-//        String selection = MediaStore.Images.Media.DATA + " LIKE?";
-//        String[] selectionArgs = new String[]{"%" + targetDirectory + "/%"};
-//        Cursor cursor = contentResolver.query(uri, projection, selection, selectionArgs, null);
-//        if (cursor != null) {
-//            while (cursor.moveToNext()) {
-////                cursor.getNotificationUri()
-//                String imagePath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
-//                Log.d(TAG, "图片===》" + imagePath);
-//
-//                //long imageId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
-//                Uri imageUri = Uri.parse("file://" + imagePath);
-//                //Uri imageUri = ContentUris.withAppendedId(uri, imageId);
-//                alreadyList.add(imageUri);
-//
-//                //imagePaths.add(imagePath);
-//            }
-//            cursor.close();
-//        }
+    private boolean isBMPFile(File file) {
+        String fileName = file.getName();
+        return fileName.toLowerCase().endsWith(".bmp");
     }
 
 
     private static BaseByViewHolder<String> currentHolder;
     private DetailImageAdapter mAdapter;
     private float originalScale;
-
+    boolean isSendSuccess = false;
     @Override
     public void onClick(View view) {
 
@@ -122,10 +136,61 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 openGallery();
                 break;
 
+            case R.id.ivSend://发送图片
+
+                showLoadingDialog();
+                new Thread(() -> {
+
+                    try {
+                        syncPics();
+                        isSendSuccess = true;
+                    } catch (Exception e) {
+                        showToast(getResources().getString(R.string.send_fail));
+                        e.printStackTrace();
+                        isSendSuccess = false;
+                    }
+
+                    runOnUiThread(() -> {
+                        hideLoadingDialog();
+                        showToast(getResources().getString(isSendSuccess ? R.string.send_success: R.string.send_fail));
+                    });
+                }).start();
+
+                break;
+
         }
 
     }
+
+    int picNum = 1;
+
+    /**
+     * 与raspberry同步文件夹图片
+     */
+    private void syncPics() throws Exception {
+
+        picNum = 1;
+        String picName = "";
+        //遍历appMd5Map
+        for (Map.Entry<String, String> entry : appMd5Map.entrySet()) {
+            String md5 = entry.getKey();
+            String path = entry.getValue();
+            Log.d(TAG, "key:" + md5 + ",value:" + path);
+            //如果raspMd5Map里面没有这个md5值，就发送图片
+            picName = "picture_" + picNum + ".bmp";
+            if (!raspMd5Map.containsKey(md5)) {
+                //发送图片
+                SocketSender.sendPic(classifyName, picName, path);
+            } else {
+                SocketSender.sendPicMd5(classifyName, picName, md5);
+            }
+            picNum++;
+        }
+
+    }
+
     private static final int PICK_IMAGES = 32;
+
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
@@ -217,7 +282,9 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
             if (b) {
                 //图片拷贝成功
-                alreadyList.add(new File(targetPath, targetFileName).getAbsolutePath());
+                File newFile = new File(targetPath, targetFileName);
+                alreadyList.add(newFile.getAbsolutePath());
+                appMd5Map.put(MD5Util.getMD5(newFile), newFile.getAbsolutePath());
                 Log.d(TAG, "复制成功==目标文件名称:" + targetFileName);
                 sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(targetPath))));
 
@@ -283,13 +350,10 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
                 });
 
-                imageView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        //显示图片预览
-                        showPicPreView(uri);
+                imageView.setOnClickListener(v -> {
+                    //显示图片预览
+                    showPicPreView(uri);
 
-                    }
                 });
 
                 ivDelete.setOnClickListener(v -> {
@@ -316,6 +380,23 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallback(mAdapter);
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
+
+    }
+
+
+    private Map<String, String> raspMd5Map = new LinkedHashMap<>();
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(List<FolderBean> folderBeans) {
+
+        if (folderBeans == null || folderBeans.isEmpty()) {
+            return;
+        }
+
+        for (FolderBean folderBean : folderBeans) {
+            Log.d(TAG, "文件夹名称:" + folderBean.getFolderName() + ",md5:" + folderBean.getFolderMd5());
+            raspMd5Map.put(folderBean.getFolderMd5(), folderBean.getFolderName());
+        }
 
     }
 
@@ -359,4 +440,11 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
     }
 
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        EventBus.getDefault().unregister(this);
+
+    }
 }

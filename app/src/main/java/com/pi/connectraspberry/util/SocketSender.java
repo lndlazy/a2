@@ -8,6 +8,7 @@ import android.util.Log;
 import com.alibaba.fastjson.JSONObject;
 import com.pi.connectraspberry.MyApplication;
 import com.pi.connectraspberry.bean.ConfigBean;
+import com.pi.connectraspberry.bean.FolderBean;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -22,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
@@ -137,28 +139,31 @@ public class SocketSender {
 
                         } else if (MyCommand.CMD_CMD.equals(messageFromServer)) {
                             // 接收指令数据长度
-                            //long l1 = System.currentTimeMillis();
                             byte[] lengthBuffer = new byte[4];
-                            // long l2 = System.currentTimeMillis();
                             int r = is.read(lengthBuffer);
-//                            long l3 = System.currentTimeMillis();
-                            //Log.d(TAG, "r====>" + r);
                             int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
-//                            long l4 = System.currentTimeMillis();
-                            //Log.d(TAG, "指令长度cmdLength====>" + cmdLength);
-                            // 接收图片数据
+                            //
                             byte[] cmdBuffer = new byte[cmdLength];
                             int read2 = is.read(cmdBuffer);
-//                            long l5 = System.currentTimeMillis();
+                            //获取指令内容
                             String cmd = new String(cmdBuffer);
-//                            long l6 = System.currentTimeMillis();
-                            //Log.d(TAG, " 指令内容:: " + cmd);
 
-//                            if ("HEART".equals(cmd)) {
-//                                Log.d(TAG, "心跳 -> " + new Date().toLocaleString() + ",时间间隔" + (l2 - l1) + "," + (l3 - l2) + "," + (l4 - l3) + "," + (l5 - l4) + "," + (l6 - l5) + "," + (l6 - l1));
-//                            } else {
 
-//                            }
+                        } else if (MyCommand.CMD_FOL.equals(messageFromServer)) {
+                            // 接收指令数据长度
+                            byte[] lengthBuffer = new byte[4];
+                            int r = is.read(lengthBuffer);
+                            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
+                            //
+                            byte[] cmdBuffer = new byte[cmdLength];
+                            int read2 = is.read(cmdBuffer);
+                            //获取指令内容 文件夹内图片的md5值
+                            String md5Json = new String(cmdBuffer);
+
+                            List<FolderBean> folderBeans = JSONObject.parseArray(md5Json, FolderBean.class);
+                            //FolderBean folderBean = JSONObject.parseObject(md5Json, FolderBean.class);
+                            Log.d(TAG, "文件夹内图片内容: " + md5Json);
+                            EventBus.getDefault().post(folderBeans);
 
                         }
 
@@ -220,7 +225,15 @@ public class SocketSender {
 
     }
 
-    public static boolean sendPic(String picName, String picPath) throws Exception {
+    /**
+     *
+     * @param folderName 文件夹名称
+     * @param picName 图片名称
+     * @param picPath 图片路径
+     * @return
+     * @throws Exception
+     */
+    public static boolean sendPic(String folderName, String picName, String picPath) throws Exception {
 
         if (!isConnect())
             return false;
@@ -230,13 +243,17 @@ public class SocketSender {
         if (TextUtils.isEmpty(picName))
             picName = file.getName();
 
-        Log.d(TAG, "发送的文件名称:" + picName + ",文件路径:" + file.getAbsolutePath());
+        Log.d(TAG, "文件夹名称:" + folderName + ",发送的文件名称:" + picName + ",文件路径:" + file.getAbsolutePath());
 
         DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
         //图片文件大小
         long imgLength = file.length();
         //发送类型
         dos.write(MyCommand.PIC_START.getBytes(StandardCharsets.UTF_8));
+        //发送文件夹名长度
+        dos.write(longToByteArray(folderName.length()));
+        //发送文件夹名
+        dos.write(folderName.getBytes(StandardCharsets.UTF_8));
         //发送文件名长度
         dos.write(longToByteArray(picName.length()));
         //发送文件名
@@ -255,25 +272,57 @@ public class SocketSender {
         dos.flush();
         return true;
 
+    }
+
+    /**
+     * 发送图片的md5值
+     * @param folderName 文件夹名称
+     * @param picName 图片名称
+     * @param picMd5 图片md5值
+     * @return
+     */
+    public static boolean sendPicMd5(String folderName, String picName, String picMd5) throws Exception {
+
+        if (!isConnect())
+            return false;
+
+        Log.d(TAG, "发送的文件名称:" + picName + ",文件md5:" + picMd5 + ",文件夹名称:" + folderName);
+
+        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+        //发送类型
+        dos.write(MyCommand.MD5_START.getBytes(StandardCharsets.UTF_8));
+        //发送文件夹名长度
+        dos.write(longToByteArray(folderName.length()));
+        //发送文件夹名
+        dos.write(folderName.getBytes(StandardCharsets.UTF_8));
+        //发送文件名长度
+        dos.write(longToByteArray(picName.length()));
+        //发送文件名
+        dos.write(picName.getBytes(StandardCharsets.UTF_8));
+        //发送md5长度
+        int md5Length = picMd5.length();
+        Log.d(TAG, "图片文件长度" + md5Length);
+        dos.write(longToByteArray(md5Length));
+        //发送md5值
+        dos.write(picMd5.getBytes(StandardCharsets.UTF_8));
+        dos.flush();
+        return true;
 
     }
 
-    private static byte[] intToBytes(int value) {
-        return new byte[]{
-                (byte) (value >>> 24),
-                (byte) (value >>> 16),
-                (byte) (value >>> 8),
-                (byte) value
-        };
-    }
 
-    public static byte[] longToByteArray(long value) {
-        byte[] byteArray = new byte[4];
-        byteArray[0] = (byte) (value >> 24);
-        byteArray[1] = (byte) (value >> 16);
-        byteArray[2] = (byte) (value >> 8);
-        byteArray[3] = (byte) value;
-        return byteArray;
+    /**
+     * 获取raspberry的folder文件夹内的所有图片
+     * @param folder
+     * @return
+     */
+    public static boolean getFolderImgs(String folder) {
+        try {
+            return sendCommand(MyCommand.getFolderImgs + folder);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -333,6 +382,7 @@ public class SocketSender {
         }
 
     }
+
     public static boolean sendDeleteFolder(String fileName) {
 
         try {
@@ -344,6 +394,23 @@ public class SocketSender {
 
     }
 
+    private static byte[] intToBytes(int value) {
+        return new byte[]{
+                (byte) (value >>> 24),
+                (byte) (value >>> 16),
+                (byte) (value >>> 8),
+                (byte) value
+        };
+    }
+
+    public static byte[] longToByteArray(long value) {
+        byte[] byteArray = new byte[4];
+        byteArray[0] = (byte) (value >> 24);
+        byteArray[1] = (byte) (value >> 16);
+        byteArray[2] = (byte) (value >> 8);
+        byteArray[3] = (byte) value;
+        return byteArray;
+    }
 
     public static void closeSocket() {
 
@@ -366,7 +433,6 @@ public class SocketSender {
         }
 
     }
-
 
 //    public static void convertToBmp(String inputPath, String outputPath) {
 //        try {
