@@ -66,6 +66,7 @@
             android:exported="true"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -88,6 +89,14 @@
             android:name=".ui.ClassifyDetailActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait" />
+
+
+        <activity
+            android:name=".ui.DemoTouchActivity"
+            android:exported="true">
+
+
+        </activity>
 
         <service android:name=".service.MyService" />
 

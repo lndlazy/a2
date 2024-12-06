@@ -150,20 +150,22 @@ public class SocketSender {
 
 
                         } else if (MyCommand.CMD_FOL.equals(messageFromServer)) {
+                            Log.d(TAG, "接受到了图片的md5值");
                             // 接收指令数据长度
                             byte[] lengthBuffer = new byte[4];
                             int r = is.read(lengthBuffer);
                             int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
+                            Log.d(TAG, "md5内容长度:" + cmdLength);
                             //
                             byte[] cmdBuffer = new byte[cmdLength];
                             int read2 = is.read(cmdBuffer);
                             //获取指令内容 文件夹内图片的md5值
                             String md5Json = new String(cmdBuffer);
-
-                            List<FolderBean> folderBeans = JSONObject.parseArray(md5Json, FolderBean.class);
-                            //FolderBean folderBean = JSONObject.parseObject(md5Json, FolderBean.class);
                             Log.d(TAG, "文件夹内图片内容: " + md5Json);
-                            EventBus.getDefault().post(folderBeans);
+                            // ["fce429a4c0ad0aeca5cfd07f2f023299"]
+                            List<String> md5List = JSONObject.parseArray(md5Json, String.class);
+                            //FolderBean folderBean = JSONObject.parseObject(md5Json, FolderBean.class);
+                            EventBus.getDefault().post(md5List);
 
                         }
 
@@ -301,7 +303,7 @@ public class SocketSender {
         dos.write(picName.getBytes(StandardCharsets.UTF_8));
         //发送md5长度
         int md5Length = picMd5.length();
-        Log.d(TAG, "图片文件长度" + md5Length);
+        Log.d(TAG, "图片md5长度" + md5Length);
         dos.write(longToByteArray(md5Length));
         //发送md5值
         dos.write(picMd5.getBytes(StandardCharsets.UTF_8));

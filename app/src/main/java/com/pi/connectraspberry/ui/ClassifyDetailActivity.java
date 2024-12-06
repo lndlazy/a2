@@ -81,13 +81,19 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
     }
 
-
     @Override
     protected void initData() {
 
         EventBus.getDefault().register(this);
-        queryImagesInDirectory(FileUtils.getLocalBasePath() + classifyName);
-        mAdapter.notifyDataSetChanged();
+
+        new Thread(() -> {
+
+            queryImagesInDirectory(FileUtils.getLocalBasePath() + classifyName);
+            runOnUiThread(() -> {
+                mAdapter.notifyDataSetChanged();
+            });
+
+        }).start();
 
         new Thread(() -> SocketSender.getFolderImgs(classifyName)).start();
 
@@ -123,6 +129,7 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
     private DetailImageAdapter mAdapter;
     private float originalScale;
     boolean isSendSuccess = false;
+
     @Override
     public void onClick(View view) {
 
@@ -152,7 +159,7 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
                     runOnUiThread(() -> {
                         hideLoadingDialog();
-                        showToast(getResources().getString(isSendSuccess ? R.string.send_success: R.string.send_fail));
+                        showToast(getResources().getString(isSendSuccess ? R.string.send_success : R.string.send_fail));
                     });
                 }).start();
 
@@ -178,7 +185,8 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
             Log.d(TAG, "key:" + md5 + ",value:" + path);
             //如果raspMd5Map里面没有这个md5值，就发送图片
             picName = "picture_" + picNum + ".bmp";
-            if (!raspMd5Map.containsKey(md5)) {
+
+            if (!raspMd5List.contains(md5)) {
                 //发送图片
                 SocketSender.sendPic(classifyName, picName, path);
             } else {
@@ -384,19 +392,21 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
     }
 
 
-    private Map<String, String> raspMd5Map = new LinkedHashMap<>();
+    private List<String> raspMd5List = new ArrayList<>();
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEvent(List<FolderBean> folderBeans) {
+    public void onEvent(List<String> md5List) {
 
-        if (folderBeans == null || folderBeans.isEmpty()) {
+        if (md5List == null || md5List.isEmpty()) {
             return;
         }
 
-        for (FolderBean folderBean : folderBeans) {
-            Log.d(TAG, "文件夹名称:" + folderBean.getFolderName() + ",md5:" + folderBean.getFolderMd5());
-            raspMd5Map.put(folderBean.getFolderMd5(), folderBean.getFolderName());
-        }
+        raspMd5List.clear();
+        raspMd5List.addAll(md5List);
+//        for (FolderBean folderBean : folderBeans) {
+//            Log.d(TAG, "文件夹名称:" + folderBean.getFolderName() + ",md5:" + folderBean.getFolderMd5());
+//            raspMd5Map.put(folderBean.getFolderMd5(), folderBean.getFolderName());
+//        }
 
     }
 
