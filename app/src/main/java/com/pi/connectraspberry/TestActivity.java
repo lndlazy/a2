@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -29,6 +30,7 @@ import com.pi.connectraspberry.ui.BaseActivity;
 import com.pi.connectraspberry.ui.ClassifyActivity;
 import com.pi.connectraspberry.ui.SettingActivity;
 import com.pi.connectraspberry.util.CommUtils;
+import com.pi.connectraspberry.util.MD5Util;
 import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ImageUtil;
 import com.pi.connectraspberry.util.MyCommand;
@@ -38,8 +40,12 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import me.jingbin.library.ByRecyclerView;
 import me.jingbin.library.adapter.BaseByViewHolder;
@@ -65,6 +71,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         return R.layout.activity_home;
     }
 
+    String classifyName = " ";
 
     @Override
     protected void initView() {
@@ -170,6 +177,25 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 break;
 
         }
+
+    }
+
+
+    private List<String> raspMd5List = new ArrayList<>();
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(List<String> md5List) {
+
+        if (md5List == null || md5List.isEmpty()) {
+            return;
+        }
+
+        raspMd5List.clear();
+        raspMd5List.addAll(md5List);
+//        for (FolderBean folderBean : folderBeans) {
+//            Log.d(TAG, "文件夹名称:" + folderBean.getFolderName() + ",md5:" + folderBean.getFolderMd5());
+//            raspMd5Map.put(folderBean.getFolderMd5(), folderBean.getFolderName());
+//        }
 
     }
 
@@ -326,9 +352,14 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 });
 
                 ivDelete.setOnClickListener(v -> {
-                    Log.d(TAG, "删除图片:" + position);
-                    alreadyList.remove(position);
-                    mAdapter.notifyDataSetChanged();
+                    try {
+                        Log.d(TAG, "删除图片:" + position);
+                        alreadyList.remove(position);
+                        deletePic(position);
+                        mAdapter.notifyDataSetChanged();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 });
 
 
@@ -369,6 +400,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     }
 
     private static final int PICK_IMAGES = 22;
+    private Map<String, String> appMd5Map = new LinkedHashMap<>();
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -392,8 +424,10 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 //                    Log.d(TAG, "多张图片,每张的url:" + imageUri);
 //                    ImageUtil.getPathFromUri(this, imageUri);
 //                    if (!alreadyList.contains(imageUri))
-                    alreadyList.add(ImageUtil.getPathFromUri(this, imageUri));
-
+                    String pathFromUri = ImageUtil.getPathFromUri(this, imageUri);
+                    alreadyList.add(pathFromUri);
+                    File file = new File(pathFromUri);
+                    appMd5Map.put(MD5Util.getMD5(file), file.getAbsolutePath());
                 }
             }
         }
@@ -409,6 +443,22 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
     }
 
+
+    //删除图片
+    private void deletePic(int position) {
+
+        int count = 0;
+        Iterator<Map.Entry<String, String>> iterator = appMd5Map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            iterator.next();
+            if (count == position) {
+                iterator.remove();
+                break;
+            }
+            count++;
+        }
+
+    }
 
     private void showPicPreView(String uri) {
 
@@ -504,24 +554,36 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     }
 
     private void sendPic() {
+
         if (alreadyList == null || alreadyList.isEmpty()) {
             showToast(getResources().getString(R.string.no_pic));
             return;
         }
 
         showProgressDialog(getResources().getString(R.string.sending));
-        picNum = 1;
+
 
         ThreadUtil.getParallelExecutor().execute(() -> {
 
-            String picName;
-
             try {
-
-                for (String filePath : alreadyList) {
+                SocketSender.sendCommand(MyCommand.COMMAND_CLEAR_PIC);
+                picNum = 1;
+                String picName = "";
+                //遍历appMd5Map
+                for (Map.Entry<String, String> entry : appMd5Map.entrySet()) {
+                    String md5 = entry.getKey();
+                    String path = entry.getValue();
+                    Log.d(TAG, "key:" + md5 + ",value:" + path);
+                    //如果raspMd5Map里面没有这个md5值，就发送图片
                     picName = "picture_" + picNum + ".bmp";
+
+                    if (!raspMd5List.contains(md5)) {
+                        //发送图片
+                        SocketSender.sendPic(classifyName, picName, path);
+                    } else {
+                        SocketSender.sendPicMd5(classifyName, picName, md5);
+                    }
                     picNum++;
-                    SocketSender.sendPic(" ", picName, filePath);
                 }
 
                 runOnUiThread(() -> {
@@ -538,6 +600,9 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                     showToast(getResources().getString(R.string.send_fail) + e.getMessage());
                 });
             }
+
+
+
 
         });
     }

@@ -15,6 +15,7 @@ public interface MyCommand {
     String createFolder = "createFolder:";
     String deleteFolder = "deleteFolder:";
     String getFolderImgs = "getFolderImgs:";
+    String clearFolder = "clearFolder:";
     //String imageMd5 = "imageMd5:";
 
 

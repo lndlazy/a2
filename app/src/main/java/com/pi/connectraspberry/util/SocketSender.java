@@ -5,7 +5,9 @@ import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.pi.connectraspberry.MyApplication;
 import com.pi.connectraspberry.bean.ConfigBean;
 import com.pi.connectraspberry.bean.FolderBean;
@@ -16,14 +18,17 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
@@ -99,74 +104,19 @@ public class SocketSender {
                             //Log.d(TAG, "心跳 -> " + new Date().toLocaleString());
 
                         } else if (MyCommand.CMD_TOA.equals(messageFromServer)) {
-                            //吐司
-                            byte[] lengthBuffer = new byte[4];
-                            int r = is.read(lengthBuffer);
-                            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
-                            // 接收图片数据
-                            byte[] cmdBuffer = new byte[cmdLength];
-                            int read2 = is.read(cmdBuffer);
-                            String notice = new String(cmdBuffer);
-                            Log.d(TAG, "发送eventbus=>" + notice);
-                            EventBus.getDefault().post("back:" + notice);
+                            showToast();
 
                         } else if (MyCommand.CMD_IMG.equals(messageFromServer)) {//图片指令
 
-                            //接受文件名长度
-                            byte[] nameLen = new byte[4];
-                            is.read(nameLen);
-                            int nameLength = ByteBuffer.wrap(nameLen).getInt();
-                            Log.d(TAG, "文件名长度====>" + nameLength);
-                            // 接收图片名称数据
-                            byte[] nameLenBuffer = new byte[nameLength];
-                            is.read(nameLenBuffer);
-                            String fileName = new String(nameLenBuffer);
-                            Log.d(TAG, "文件名称:" + fileName);
-
-                            // 接收图片数据长度
-                            byte[] lengthBuffer = new byte[4];
-                            int read1 = is.read(lengthBuffer);
-                            Log.d(TAG, "read1====>" + read1);
-                            int imageLength = ByteBuffer.wrap(lengthBuffer).getInt();
-                            Log.d(TAG, "图片长度imageLength====>" + imageLength);
-                            // 接收图片数据
-                            byte[] imageBuffer = new byte[imageLength];
-                            int read2 = is.read(imageBuffer);
-                            Log.d(TAG, " 读取图片结束:: " + read2);
-                            //保存图片到相册
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(imageBuffer, 0, imageBuffer.length);
-                            ImageUtil.saveImageToGallery(MyApplication.getInstance(), bitmap, fileName);
+                            picCommand();
 
                         } else if (MyCommand.CMD_CMD.equals(messageFromServer)) {
                             // 接收指令数据长度
-                            byte[] lengthBuffer = new byte[4];
-                            int r = is.read(lengthBuffer);
-                            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
-                            //
-                            byte[] cmdBuffer = new byte[cmdLength];
-                            int read2 = is.read(cmdBuffer);
-                            //获取指令内容
-                            String cmd = new String(cmdBuffer);
+                            cmdCommand();
 
 
                         } else if (MyCommand.CMD_FOL.equals(messageFromServer)) {
-                            Log.d(TAG, "接受到了图片的md5值");
-                            // 接收指令数据长度
-                            byte[] lengthBuffer = new byte[4];
-                            int r = is.read(lengthBuffer);
-                            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
-                            Log.d(TAG, "md5内容长度:" + cmdLength);
-                            //
-                            byte[] cmdBuffer = new byte[cmdLength];
-                            int read2 = is.read(cmdBuffer);
-                            //获取指令内容 文件夹内图片的md5值
-                            String md5Json = new String(cmdBuffer);
-                            Log.d(TAG, "文件夹内图片内容: " + md5Json);
-                            // ["fce429a4c0ad0aeca5cfd07f2f023299"]
-                            List<String> md5List = JSONObject.parseArray(md5Json, String.class);
-                            //FolderBean folderBean = JSONObject.parseObject(md5Json, FolderBean.class);
-                            EventBus.getDefault().post(md5List);
-
+                            folderCmd();
                         }
 
                     }
@@ -174,11 +124,105 @@ public class SocketSender {
                 }
 //                }
             } catch (Exception e) {
+
+                if (socketListener != null)
+                    socketListener.onConnectLost();
+
                 e.printStackTrace();
             }
 
         }
     };
+
+    private static void folderCmd() {
+        try {
+            Log.d(TAG, "接受到了图片的md5值");
+            // 接收指令数据长度
+            byte[] lengthBuffer = new byte[4];
+            int r = is.read(lengthBuffer);
+            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
+            Log.d(TAG, "md5内容长度:" + cmdLength);
+            //
+            byte[] cmdBuffer = new byte[cmdLength];
+            int read2 = is.read(cmdBuffer);
+            //获取指令内容 文件夹内图片的md5值
+            String md5Json = new String(cmdBuffer);
+            Log.d(TAG, "文件夹内图片内容: " + md5Json);
+            // ["fce429a4c0ad0aeca5cfd07f2f023299"]
+            Map<String, Object> map2 = JSON.parseObject(md5Json, new TypeReference<Map<String, Object>>() {
+            });
+
+            List<String> keyList2 = new ArrayList<>(map2.keySet());
+            //List<String> md5List = JSONObject.parseArray(md5Json, String.class);
+            //FolderBean folderBean = JSONObject.parseObject(md5Json, FolderBean.class);
+            EventBus.getDefault().post(keyList2);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void cmdCommand() {
+        try {
+            byte[] lengthBuffer = new byte[4];
+            int r = is.read(lengthBuffer);
+            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
+            //
+            byte[] cmdBuffer = new byte[cmdLength];
+            int read2 = is.read(cmdBuffer);
+            //获取指令内容
+            String cmd = new String(cmdBuffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void picCommand() {
+        //接受文件名长度
+        try {
+            byte[] nameLen = new byte[4];
+            is.read(nameLen);
+            int nameLength = ByteBuffer.wrap(nameLen).getInt();
+            Log.d(TAG, "文件名长度====>" + nameLength);
+            // 接收图片名称数据
+            byte[] nameLenBuffer = new byte[nameLength];
+            is.read(nameLenBuffer);
+            String fileName = new String(nameLenBuffer);
+            Log.d(TAG, "文件名称:" + fileName);
+
+            // 接收图片数据长度
+            byte[] lengthBuffer = new byte[4];
+            int read1 = is.read(lengthBuffer);
+            Log.d(TAG, "read1====>" + read1);
+            int imageLength = ByteBuffer.wrap(lengthBuffer).getInt();
+            Log.d(TAG, "图片长度imageLength====>" + imageLength);
+            // 接收图片数据
+            byte[] imageBuffer = new byte[imageLength];
+            int read2 = is.read(imageBuffer);
+            Log.d(TAG, " 读取图片结束:: " + read2);
+            //保存图片到相册
+            Bitmap bitmap = BitmapFactory.decodeByteArray(imageBuffer, 0, imageBuffer.length);
+            ImageUtil.saveImageToGallery(MyApplication.getInstance(), bitmap, fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void showToast() throws IOException {
+        try {
+            //吐司
+            byte[] lengthBuffer = new byte[4];
+            int r = is.read(lengthBuffer);
+            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
+            // 接收图片数据
+            byte[] cmdBuffer = new byte[cmdLength];
+            int read2 = is.read(cmdBuffer);
+            String notice = new String(cmdBuffer);
+            Log.d(TAG, "发送eventbus=>" + notice);
+            EventBus.getDefault().post("back:" + notice);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public static boolean connectSocket(SocketListener listener) {
@@ -432,6 +476,35 @@ public class SocketSender {
         } finally {
             socket = null;
             timer = null;
+        }
+
+    }
+
+    /**
+     * 清空文件夹内的图片
+     */
+    public static void sendClearPic(String fileName) {
+
+        if (!isConnect())
+            return;
+
+        try {
+            if (TextUtils.isEmpty(fileName))
+                return;
+
+            OutputStream outputStream = socket.getOutputStream();
+            String msg = MyCommand.clearFolder + fileName;
+            //命令开始
+            outputStream.write(MyCommand.CMD_START.getBytes(StandardCharsets.UTF_8));
+            //指令长度
+            outputStream.write(longToByteArray(msg.length()));
+            //指令内容
+            outputStream.write(msg.getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
         }
 
     }

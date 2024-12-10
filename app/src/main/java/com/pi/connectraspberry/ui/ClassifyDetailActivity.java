@@ -30,6 +30,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,6 +150,7 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 new Thread(() -> {
 
                     try {
+                        SocketSender.sendClearPic(classifyName);
                         syncPics();
                         isSendSuccess = true;
                     } catch (Exception e) {
@@ -365,9 +367,15 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 });
 
                 ivDelete.setOnClickListener(v -> {
-                    Log.d(TAG, "删除图片:" + position);
+                    try {
+                        Log.d(TAG, "删除图片:" + position);
 
-                    deletePic(uri, position);
+                        deletePic(uri, position);
+                        deletePic(position);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+//                    appMd5Map.remove()
                 });
 
 
@@ -388,6 +396,22 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallback(mAdapter);
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
+
+    }
+
+    //删除图片
+    private void deletePic(int position) {
+
+        int count = 0;
+        Iterator<Map.Entry<String, String>> iterator = appMd5Map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            iterator.next();
+            if (count == position) {
+                iterator.remove();
+                break;
+            }
+            count++;
+        }
 
     }
 
