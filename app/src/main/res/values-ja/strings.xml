@@ -60,4 +60,6 @@
     <string name="manual_mode">Manual mode</string>
     <string name="switch_to_auto">Switch to manual mode</string>
     <string name="switch_to_manual">Switch to manual mode</string>
+    <string name="filter_illegal_pic">Illegal images have been filtered out</string>
+    <string name="converting">converting</string>
 </resources>

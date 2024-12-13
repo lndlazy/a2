@@ -28,10 +28,10 @@
     <string name="no_pic">no pictures</string>
     <string name="sending">seding...</string>
     <string name="send_success">send success</string>
-    <string name="send_fail">send fail !!!</string>
-    <string name="connect_lost">connect fail</string>
-    <string name="connecting">connecting</string>
-    <string name="connect_success">connect success</string>
+    <string name="send_fail">发送失败!!!</string>
+    <string name="connect_lost">未连接</string>
+    <string name="connecting">连接中...</string>
+    <string name="connect_success">连接成功</string>
     <string name="switching_time">Switching Time</string>
     <string name="hue_offset">hue offset</string>
     <string name="sat_offset">sat offset</string>
@@ -61,6 +61,8 @@
     <string name="manual_mode">手动模式</string>
     <string name="switch_to_auto">切换到自动模式</string>
     <string name="switch_to_manual">切换到手动模式</string>
+    <string name="filter_illegal_pic">已过滤不合规图片</string>
+    <string name="converting">转换中...</string>
 
 
 </resources>

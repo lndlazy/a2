@@ -30,6 +30,7 @@ import com.pi.connectraspberry.ui.BaseActivity;
 import com.pi.connectraspberry.ui.ClassifyActivity;
 import com.pi.connectraspberry.ui.SettingActivity;
 import com.pi.connectraspberry.util.CommUtils;
+import com.pi.connectraspberry.util.FileUtils;
 import com.pi.connectraspberry.util.MD5Util;
 import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ImageUtil;
@@ -155,6 +156,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         if (message.startsWith("back:")) {
             String msg = message.substring(5);
             showToast(msg);
+            hideProgressDialog();
             return;
         }
 
@@ -223,7 +225,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
         hideProgressDialog();
 
-        ToastUtil.show(getResources().getString(R.string.connect_success)) ;
+        ToastUtil.show(getResources().getString(R.string.connect_success));
         if (CommUtils.isMainLooper()) {
             showPic(ivWifi, R.mipmap.ic_wifi_blue);
 
@@ -355,7 +357,6 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                     try {
                         Log.d(TAG, "删除图片:" + position);
                         alreadyList.remove(position);
-                        deletePic(position);
                         mAdapter.notifyDataSetChanged();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -400,12 +401,15 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     }
 
     private static final int PICK_IMAGES = 22;
-    private Map<String, String> appMd5Map = new LinkedHashMap<>();
+//    private Map<String, String> appMd5Map = new LinkedHashMap<>();
+
+    private boolean hasIllegalPic = false;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(TAG, "结果::" + requestCode + "," + resultCode);
+        hasIllegalPic = false;
         if (requestCode == PICK_IMAGES && resultCode == RESULT_OK) {
             if (data.getClipData() != null) {
                 Log.d(TAG, "多张图片,数量:" + data.getClipData().getItemCount());
@@ -424,12 +428,23 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 //                    Log.d(TAG, "多张图片,每张的url:" + imageUri);
 //                    ImageUtil.getPathFromUri(this, imageUri);
 //                    if (!alreadyList.contains(imageUri))
+
                     String pathFromUri = ImageUtil.getPathFromUri(this, imageUri);
+                    boolean standardPic = FileUtils.isStandardPic(pathFromUri);
+                    if (!standardPic) {
+                        //非bmp格式图片不处理
+                        hasIllegalPic = true;
+                        continue;
+                    }
+
                     alreadyList.add(pathFromUri);
-                    File file = new File(pathFromUri);
-                    appMd5Map.put(MD5Util.getMD5(file), file.getAbsolutePath());
+
                 }
             }
+        }
+
+        if (hasIllegalPic) {
+            showToast(getResources().getString(R.string.filter_illegal_pic));
         }
 
         if (mAdapter != null)
@@ -443,22 +458,6 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
     }
 
-
-    //删除图片
-    private void deletePic(int position) {
-
-        int count = 0;
-        Iterator<Map.Entry<String, String>> iterator = appMd5Map.entrySet().iterator();
-        while (iterator.hasNext()) {
-            iterator.next();
-            if (count == position) {
-                iterator.remove();
-                break;
-            }
-            count++;
-        }
-
-    }
 
     private void showPicPreView(String uri) {
 
@@ -499,9 +498,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 break;
 
             case R.id.ivSend://发送图片
-
                 sendPic();
-
                 break;
 
             case R.id.ivSelect://去相册选择图片
@@ -562,6 +559,9 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
         showProgressDialog(getResources().getString(R.string.sending));
 
+//        appMd5Map.clear();
+//        File file = new File(pathFromUri);
+//        appMd5Map.put(MD5Util.getMD5(file), file.getAbsolutePath());
 
         ThreadUtil.getParallelExecutor().execute(() -> {
 
@@ -570,21 +570,38 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                 picNum = 1;
                 String picName = "";
                 //遍历appMd5Map
-                for (Map.Entry<String, String> entry : appMd5Map.entrySet()) {
-                    String md5 = entry.getKey();
-                    String path = entry.getValue();
-                    Log.d(TAG, "key:" + md5 + ",value:" + path);
-                    //如果raspMd5Map里面没有这个md5值，就发送图片
+                File file;
+                for (String pathFromUri : alreadyList) {
+
+                    file = new File(pathFromUri);
+                    String md5 = MD5Util.getMD5(file);
+
                     picName = "picture_" + picNum + ".bmp";
 
                     if (!raspMd5List.contains(md5)) {
                         //发送图片
-                        SocketSender.sendPic(classifyName, picName, path);
+                        SocketSender.sendPic(classifyName, picName, file.getAbsolutePath());
                     } else {
                         SocketSender.sendPicMd5(classifyName, picName, md5);
                     }
                     picNum++;
                 }
+
+//                for (Map.Entry<String, String> entry : appMd5Map.entrySet()) {
+//                    String md5 = entry.getKey();
+//                    String path = entry.getValue();
+//                    Log.d(TAG, "key:" + md5 + ",value:" + path);
+//                    //如果raspMd5Map里面没有这个md5值，就发送图片
+//                    picName = "picture_" + picNum + ".bmp";
+//
+//                    if (!raspMd5List.contains(md5)) {
+//                        //发送图片
+//                        SocketSender.sendPic(classifyName, picName, path);
+//                    } else {
+//                        SocketSender.sendPicMd5(classifyName, picName, md5);
+//                    }
+//                    picNum++;
+//                }
 
                 runOnUiThread(() -> {
                     hideProgressDialog();
@@ -602,8 +619,6 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
             }
 
 
-
-
         });
     }
 
@@ -615,7 +630,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     }
 
     Runnable convertRunnable = () -> {
-        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CONVERT);
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CONVERT + classifyName);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();

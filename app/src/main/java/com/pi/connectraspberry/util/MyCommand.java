@@ -19,7 +19,7 @@ public interface MyCommand {
     //String imageMd5 = "imageMd5:";
 
 
-    String COMMAND_CONVERT = "CONVERT";
+    String COMMAND_CONVERT = "CONVERT:";
     String COMMAND_AUTO = "AUTO";
     String COMMAND_NEXT = "NEXT";
     String COMMAND_PRE = "PRE";

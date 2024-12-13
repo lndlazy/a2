@@ -215,7 +215,7 @@
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_marginRight="8dp"
-        android:src="@mipmap/ic_convert"
+        android:src="@mipmap/ic_convert_blue"
         app:layout_constraintBottom_toBottomOf="@id/ivConvert"
         app:layout_constraintRight_toRightOf="@id/ivConvert"
         app:layout_constraintTop_toTopOf="@id/ivConvert" />

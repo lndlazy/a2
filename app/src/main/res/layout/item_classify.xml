@@ -30,7 +30,7 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:padding="12dp"
-        android:src="@mipmap/ic_choose_send"
+        android:src="@mipmap/ic_convert_blue"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

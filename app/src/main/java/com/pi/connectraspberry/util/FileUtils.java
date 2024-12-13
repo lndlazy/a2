@@ -1,6 +1,8 @@
 package com.pi.connectraspberry.util;
 
+import android.graphics.BitmapFactory;
 import android.os.Environment;
+import android.text.Spannable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -231,5 +233,50 @@ public class FileUtils {
         }
 
         return isCopySuccess;
+    }
+
+
+    public static boolean isStandardPic(String filePath) {
+
+        String imageExtension = getFileExtension(filePath);
+        if (!"bmp".equalsIgnoreCase(imageExtension)) {
+            //非bmp格式图片不处理
+            return false;
+        }
+
+        return isSizeNormal(filePath);
+
+    }
+
+    public static String getFileExtension(String filePath) {
+        if (filePath != null && filePath.lastIndexOf('.') != -1) {
+            return filePath.substring(filePath.lastIndexOf('.') + 1);
+        }
+        return "";
+    }
+
+    private static boolean isSizeNormal(String bmpFilePath) {
+
+        try {
+
+            FileInputStream fis = new FileInputStream(bmpFilePath);
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(fis, null, options);
+            fis.close();
+
+            int width = options.outWidth;
+            int height = options.outHeight;
+            System.out.println("图片宽度: " + width + ", 图片高度: " + height);
+
+            if (width < 2160 || height < 3060)
+                return false;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 }

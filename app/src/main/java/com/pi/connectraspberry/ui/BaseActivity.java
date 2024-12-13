@@ -85,7 +85,14 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected ProgressDialog dialog;
 
     protected void showProgressDialog(String msg) {
+        hideProgressDialog();
+        if (CommUtils.isMainLooper()) {
+            showProgress(msg);
+        } else
+            runOnUiThread(() -> showProgress(msg));
+    }
 
+    private void showProgress(String msg) {
         if (dialog == null) {
             dialog = new ProgressDialog(this);
             dialog.setCancelable(true);
@@ -93,13 +100,22 @@ public abstract class BaseActivity extends AppCompatActivity {
         dialog.setMessage(msg);
         if (!dialog.isShowing())
             dialog.show();
-
     }
 
     protected void hideProgressDialog() {
-        if (dialog != null && dialog.isShowing())
-            dialog.dismiss();
+
+        if (CommUtils.isMainLooper()) {
+            hideProgress();
+        } else
+            runOnUiThread(() -> hideProgress());
     }
+
+    private void hideProgress() {
+        if (dialog != null && dialog.isShowing()) {
+            dialog.dismiss();
+        }
+    }
+
 
     @Override
     protected void onDestroy() {

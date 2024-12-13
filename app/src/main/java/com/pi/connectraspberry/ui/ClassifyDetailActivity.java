@@ -51,9 +51,6 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
     private String classifyName;
 
 
-    //key:md5值, value:文件路径
-    private Map<String, String> appMd5Map = new LinkedHashMap<>();
-
     @Override
     protected int getLayoutId() {
         return R.layout.activity_calssify_detail;
@@ -110,9 +107,6 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 for (File file : files) {
                     if (isBMPFile(file)) {
                         alreadyList.add(file.getAbsolutePath());
-                        String md5 = MD5Util.getMD5(file);
-                        appMd5Map.put(md5, file.getAbsolutePath());
-
                     }
                 }
             }
@@ -180,21 +174,24 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
         picNum = 1;
         String picName = "";
-        //遍历appMd5Map
-        for (Map.Entry<String, String> entry : appMd5Map.entrySet()) {
-            String md5 = entry.getKey();
-            String path = entry.getValue();
-            Log.d(TAG, "key:" + md5 + ",value:" + path);
-            //如果raspMd5Map里面没有这个md5值，就发送图片
-            picName = "picture_" + picNum + ".bmp";
+        File file;
+        for (String pathFromUri : alreadyList) {
 
+            file = new File(pathFromUri);
+            String md5 = MD5Util.getMD5(file);
+
+            picName = "picture_" + picNum + ".bmp";
+            Log.d(TAG, "md5值:" + md5 + ",图片名称:" + picName);
             if (!raspMd5List.contains(md5)) {
+                Log.d(TAG, "不包含直接发图片");
                 //发送图片
-                SocketSender.sendPic(classifyName, picName, path);
+                SocketSender.sendPic(classifyName, picName, file.getAbsolutePath());
             } else {
+                Log.d(TAG, "已包含 发md5 ");
                 SocketSender.sendPicMd5(classifyName, picName, md5);
             }
             picNum++;
+
         }
 
     }
@@ -236,7 +233,9 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
                 hideLoadingDialog();
                 showLoadingDialog();
+
                 try {
+
                     copyPicture(data, count);
                 } catch (Exception e) {
                     MLogger.e("复制图片失败:" + e.getMessage());
@@ -252,6 +251,9 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
     }
 
     private void copyPicture(Intent data, int count) {
+
+
+        boolean hasIllegalPic = false;
         for (int i = 0; i < count; i++) {
 
             if (alreadyList.size() >= 9) {
@@ -261,16 +263,16 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
             //alreadyList.clear();
             Uri imageUri = data.getClipData().getItemAt(i).getUri();
-            // 处理每张图片的Uri
-//            Log.d(TAG, "多张图片,每张的url:" + imageUri);
-//                    if (!alreadyList.contains(imageUri))
-//                    alreadyList.add(imageUri);
-//                    String path = imageUri.getPath();
-//
-//                    Log.d(TAG, "图片地址:" + path);
-
             //原文件路径
             String imgPath = ImageUtil.getPathFromUri(this, imageUri);
+
+            boolean standardPic = FileUtils.isStandardPic(imgPath);
+            if (!standardPic) {
+                //非bmp格式图片不处理
+                hasIllegalPic = true;
+                continue;
+            }
+
             File imgFile = new File(imgPath);
             //目标文件目录
             String targetPath = FileUtils.getLocalBasePath() + classifyName;
@@ -294,7 +296,7 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 //图片拷贝成功
                 File newFile = new File(targetPath, targetFileName);
                 alreadyList.add(newFile.getAbsolutePath());
-                appMd5Map.put(MD5Util.getMD5(newFile), newFile.getAbsolutePath());
+
                 Log.d(TAG, "复制成功==目标文件名称:" + targetFileName);
                 sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(targetPath))));
 
@@ -303,6 +305,11 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
             }
 
         }
+
+        if (hasIllegalPic) {
+            showToast(getResources().getString(R.string.filter_illegal_pic));
+        }
+
     }
 
 
@@ -371,11 +378,11 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                         Log.d(TAG, "删除图片:" + position);
 
                         deletePic(uri, position);
-                        deletePic(position);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-//                    appMd5Map.remove()
+
                 });
 
 
@@ -399,38 +406,19 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
     }
 
-    //删除图片
-    private void deletePic(int position) {
-
-        int count = 0;
-        Iterator<Map.Entry<String, String>> iterator = appMd5Map.entrySet().iterator();
-        while (iterator.hasNext()) {
-            iterator.next();
-            if (count == position) {
-                iterator.remove();
-                break;
-            }
-            count++;
-        }
-
-    }
-
 
     private List<String> raspMd5List = new ArrayList<>();
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(List<String> md5List) {
 
+        Log.d(TAG, "接收到的md5List==>:" + md5List.size());
         if (md5List == null || md5List.isEmpty()) {
             return;
         }
 
         raspMd5List.clear();
         raspMd5List.addAll(md5List);
-//        for (FolderBean folderBean : folderBeans) {
-//            Log.d(TAG, "文件夹名称:" + folderBean.getFolderName() + ",md5:" + folderBean.getFolderMd5());
-//            raspMd5Map.put(folderBean.getFolderMd5(), folderBean.getFolderName());
-//        }
 
     }
 

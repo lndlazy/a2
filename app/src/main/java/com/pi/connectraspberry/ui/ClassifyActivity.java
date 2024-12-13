@@ -1,6 +1,7 @@
 package com.pi.connectraspberry.ui;
 
 import android.content.Intent;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -11,8 +12,14 @@ import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.pi.connectraspberry.R;
 import com.pi.connectraspberry.callback.MyItemAnimator;
+import com.pi.connectraspberry.service.EventMsg;
 import com.pi.connectraspberry.util.FileUtils;
+import com.pi.connectraspberry.util.MyCommand;
 import com.pi.connectraspberry.util.SocketSender;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,6 +62,7 @@ public class ClassifyActivity extends BaseActivity {
     @Override
     protected void initData() {
 
+        EventBus.getDefault().register(this);
     }
 
     /**
@@ -108,11 +116,6 @@ public class ClassifyActivity extends BaseActivity {
                                     }
                                 }).start();
 
-//                                if (success)
-//                                    showToast(getResources().getString(R.string.add_classify_success));
-//                                else
-//                                    showToast(getResources().getString(R.string.add_classify_fail));
-
                             }
                         })
                 .show();
@@ -138,10 +141,6 @@ public class ClassifyActivity extends BaseActivity {
 
         recyclerView.setAdapter(mAdapter);
         mAdapter.setNewData(folderList);   // 设置第一页数据
-
-//        ItemTouchHelper.Callback callback = new SwipeToDeleteCallback(mAdapter);
-//        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
-//        itemTouchHelper.attachToRecyclerView(recyclerView);
 
         MyItemAnimator itemAnimator = new MyItemAnimator();
         recyclerView.setItemAnimator(itemAnimator);
@@ -176,6 +175,22 @@ public class ClassifyActivity extends BaseActivity {
     }
 
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(String message) {
+
+        // 处理事件
+        if (TextUtils.isEmpty(message))
+            return;
+
+        //Log.d(TAG, "接受到返回的消息: " + message);
+        if (message.startsWith("back:")) {
+            if (message.contains("convert success"))
+                hideProgressDialog();
+        }
+
+    }
+
+
     private void showShowDialog(String name) {
         //弹出提示，是否删除当前文件夹
         new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.are_sure_show) + name + getResources().getString(R.string.are_sure_show_after),
@@ -184,6 +199,17 @@ public class ClassifyActivity extends BaseActivity {
                             public void onConfirm() {
                                 //toast("click confirm");
                                 Log.d(TAG, "发送显示当前文件夹内的所有图片");
+
+                                showProgressDialog(getResources().getString(R.string.converting));
+                                new Thread(() -> {
+                                    boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CONVERT + name);
+                                    if (!b) {
+                                        hideProgressDialog();
+                                        showToast(getResources().getString(R.string.connect_lost));
+
+                                    }
+                                }).start();
+
                             }
                         })
                 .show();
@@ -234,5 +260,11 @@ public class ClassifyActivity extends BaseActivity {
                         })
                 .show();
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 }

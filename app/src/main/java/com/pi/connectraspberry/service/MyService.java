@@ -126,7 +126,7 @@ public class MyService extends Service {
         Log.d(TAG, "是否连接成功:" + b);
         if (b) {
             sendConnectSuccess();
-            EventBus.getDefault().post(EventMsg.CLEAR_PIC_DATA);
+            //EventBus.getDefault().post(EventMsg.CLEAR_PIC_DATA);
 
         } else
             noConnect();
