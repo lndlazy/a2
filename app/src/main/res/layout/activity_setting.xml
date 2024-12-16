@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -22,24 +21,24 @@
 
         <ImageView
             android:id="@+id/ivBack"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginLeft="10dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="15dp"
+            android:background="?attr/selectableItemBackground"
             android:src="@mipmap/ic_back"
             app:layout_constraintBottom_toBottomOf="@id/tvTop"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="@id/tvTop" />
 
-
         <TextView
             android:id="@+id/tvReset"
             android:layout_width="100dp"
             android:layout_height="50dp"
+            android:background="?attr/selectableItemBackground"
             android:gravity="center"
             android:text="@string/reset"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -53,7 +52,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clTime"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="50dp"
+        android:background="?attr/selectableItemBackground">
 
         <TextView
             android:layout_width="wrap_content"
@@ -89,7 +89,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clHue"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="50dp"
+        android:background="?attr/selectableItemBackground">
 
         <TextView
             android:layout_width="wrap_content"
@@ -125,7 +126,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clSat"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="50dp"
+        android:background="?attr/selectableItemBackground">
 
         <TextView
             android:layout_width="wrap_content"
@@ -161,7 +163,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clBright"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="50dp"
+        android:background="?attr/selectableItemBackground">
 
         <TextView
             android:layout_width="wrap_content"
@@ -197,7 +200,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clContrast"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="50dp"
+        android:background="?attr/selectableItemBackground">
 
         <TextView
             android:layout_width="wrap_content"
@@ -233,7 +237,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clSwitch"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="50dp"
+        android:background="?attr/selectableItemBackground">
 
         <TextView
             android:id="@+id/tvMode"
@@ -247,10 +252,10 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:src="@mipmap/ic_mode_switch"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:padding="15dp"
+            android:src="@mipmap/ic_mode_switch"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

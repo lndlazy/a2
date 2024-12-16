@@ -140,6 +140,11 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
             case R.id.ivSend://发送图片
 
+                if (alreadyList == null || alreadyList.isEmpty()) {
+                    showToast(getResources().getString(R.string.no_pic));
+                    return;
+                }
+
                 showLoadingDialog();
                 new Thread(() -> {
 

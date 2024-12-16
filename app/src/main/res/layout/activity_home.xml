@@ -175,29 +175,29 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/clSend" />
 
-    <EditText
-        android:id="@+id/etSecond"
-        android:layout_width="80dp"
-        android:layout_height="30dp"
-        android:layout_marginTop="15dp"
-        android:background="@color/gray"
-        android:hint="60"
-        android:paddingLeft="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="@color/white"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />
+<!--    <EditText-->
+<!--        android:id="@+id/etSecond"-->
+<!--        android:layout_width="80dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginTop="15dp"-->
+<!--        android:background="@color/gray"-->
+<!--        android:hint="60"-->
+<!--        android:paddingLeft="5dp"-->
+<!--        android:textColor="@color/white"-->
+<!--        android:textColorHint="@color/white"-->
+<!--        app:layout_constraintLeft_toLeftOf="parent"-->
+<!--        app:layout_constraintRight_toRightOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />-->
 
     <ImageView
         android:id="@+id/ivConvert"
         android:layout_width="130dp"
         android:layout_height="50dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="30dp"
         android:src="@drawable/shape_convert_bg"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etSecond" />
+        app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />
 
     <TextView
         android:layout_width="wrap_content"

@@ -58,7 +58,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     private static final String TAG = "TestActivity";
     private static final int RC_CAMERA_PERM = 33;
     private ByRecyclerView tvRecyclerView;
-    private EditText etSecond;
+//    private EditText etSecond;
     private ImageView ivPreview;
     private MyService mService;
     private boolean mBound = false;
@@ -91,7 +91,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         ImageView ivPre = findViewById(R.id.ivPre);
         ImageView ivNext = findViewById(R.id.ivNext);
         TextView tvSlide = findViewById(R.id.tvSlide);
-        etSecond = findViewById(R.id.etSecond);
+//        etSecond = findViewById(R.id.etSecond);
         tvRecyclerView = findViewById(R.id.tvRecyclerView);
         initRecyclerView();
 
@@ -271,7 +271,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
             //startCamera();
         } else {
             // 请求权限
-            EasyPermissions.requestPermissions(this, "需要相机权限来拍照",
+            EasyPermissions.requestPermissions(this, getString(R.string.need_photo_permission),
                     RC_CAMERA_PERM, pers);
         }
     }

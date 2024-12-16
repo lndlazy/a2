@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 public class SettingActivity extends BaseActivity implements View.OnClickListener {
 
 
+    private static final String TAG = "SettingActivity";
     private TextView tvTime;
     private TextView tvHue;
     private TextView tvSat;
@@ -384,6 +385,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
 
             syncConfig2Raspberry(SpUtils.BRIGHT, value);
         });
+
 
     }
 

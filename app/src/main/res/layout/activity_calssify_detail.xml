@@ -15,9 +15,10 @@
 
     <ImageView
         android:id="@+id/ivBack"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginLeft="10dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="15dp"
+        android:background="?attr/selectableItemBackground"
         android:src="@mipmap/ic_back"
         app:layout_constraintBottom_toBottomOf="@id/tvTop"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -35,6 +36,7 @@
         android:id="@+id/ivSend"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:background="?attr/selectableItemBackground"
         android:padding="12dp"
         android:src="@mipmap/ic_choose_send"
         app:layout_constraintRight_toRightOf="parent"
@@ -56,6 +58,7 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_margin="20dp"
+        android:background="?attr/selectableItemBackground"
         android:src="@mipmap/ic_add_circle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
