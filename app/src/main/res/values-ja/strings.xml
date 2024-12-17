@@ -63,5 +63,8 @@
     <string name="filter_illegal_pic">不正な画像がフィルタされました</string>
     <string name="converting">変換中...</string>
     <string name="need_photo_permission">カメラ権限が必要</string>
+    <string name="language">言語</string>
+    <string name="choose_language">言語の選択</string>
+    <string name="restart_app">アプリの有効化を再起動する必要があります</string>
 
 </resources>

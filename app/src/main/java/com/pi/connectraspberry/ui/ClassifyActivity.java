@@ -184,7 +184,7 @@ public class ClassifyActivity extends BaseActivity {
 
         //Log.d(TAG, "接受到返回的消息: " + message);
         if (message.startsWith("back:")) {
-            if (message.contains("convert success"))
+            if (message.contains("convert "))
                 hideProgressDialog();
         }
 

@@ -22,6 +22,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 
 import com.bumptech.glide.Glide;
+import com.pi.connectraspberry.bean.EventBusBean;
+import com.pi.connectraspberry.bean.EventbusType;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
 import com.pi.connectraspberry.service.EventMsg;
 import com.pi.connectraspberry.service.MyService;
@@ -35,6 +37,7 @@ import com.pi.connectraspberry.util.MD5Util;
 import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ImageUtil;
 import com.pi.connectraspberry.util.MyCommand;
+import com.pi.connectraspberry.util.SpUtils;
 import com.pi.connectraspberry.util.ThreadUtil;
 
 import org.greenrobot.eventbus.EventBus;
@@ -58,7 +61,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     private static final String TAG = "TestActivity";
     private static final int RC_CAMERA_PERM = 33;
     private ByRecyclerView tvRecyclerView;
-//    private EditText etSecond;
+    //    private EditText etSecond;
     private ImageView ivPreview;
     private MyService mService;
     private boolean mBound = false;
@@ -156,7 +159,11 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         if (message.startsWith("back:")) {
             String msg = message.substring(5);
             showToast(msg);
-            hideProgressDialog();
+
+            //Log.d(TAG, "接受到返回的消息: " + message);
+            if (message.contains("convert "))
+                hideProgressDialog();
+
             return;
         }
 
@@ -181,6 +188,30 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
         }
 
     }
+
+
+//    @Subscribe(threadMode = ThreadMode.MAIN)
+//    public void onEvent(EventBusBean eventBusBean) {
+//
+//        if (eventBusBean == null)
+//            return;
+//
+//        if (TextUtils.isEmpty(eventBusBean.getType()))
+//            return;
+//
+//        switch (eventBusBean.getType()) {
+//
+//            case EventbusType.Language:
+//                //切换
+////                updateLanguage(SpUtils.getLanguagePreference());
+//                Log.d(TAG, "更新语言:" + eventBusBean.getMessage());
+//                updateLanguage(eventBusBean.getMessage());
+//                break;
+//
+//
+//        }
+//
+//    }
 
 
     private List<String> raspMd5List = new ArrayList<>();
@@ -626,6 +657,7 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
      * 转换图片
      */
     private void convertPic() {
+        showProgressDialog(getResources().getString(R.string.converting));
         ThreadUtil.getParallelExecutor().execute(convertRunnable);
     }
 

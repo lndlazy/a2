@@ -64,6 +64,9 @@
     <string name="filter_illegal_pic">已过滤不合规图片</string>
     <string name="converting">转换中...</string>
     <string name="need_photo_permission">需要相机权限</string>
+    <string name="language">语言</string>
+    <string name="choose_language">选择语言</string>
+    <string name="restart_app">需要重启APP生效</string>
 
 
 </resources>

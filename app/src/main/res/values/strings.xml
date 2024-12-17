@@ -63,5 +63,8 @@
     <string name="filter_illegal_pic">Illegal images have been filtered out</string>
     <string name="converting">converting...</string>
     <string name="need_photo_permission">Camera permission required</string>
+    <string name="language">Language</string>
+    <string name="choose_language">Choose language</string>
+    <string name="restart_app">The app needs to be restarted to take effect</string>
 
 </resources>

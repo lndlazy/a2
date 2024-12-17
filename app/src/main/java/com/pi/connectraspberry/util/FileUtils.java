@@ -22,14 +22,14 @@ public class FileUtils {
 
     private static final String TAG = "FileUtils";
 
-    /**
-     * 系统a2目录
-     *
-     * @return
-     */
-    public static String getBasePath() {
-        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/a2/";
-    }
+//    /**
+//     * 系统a2目录
+//     *
+//     * @return
+//     */
+//    public static String getBasePath() {
+//        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/a2/";
+//    }
 
     /**
      * 获取应用目录
@@ -37,7 +37,15 @@ public class FileUtils {
      * @return
      */
     public static String getLocalBasePath() {
-        return MyApplication.getInstance().getFilesDir() + "/a2/";
+
+        String path = MyApplication.getInstance().getFilesDir() + "/a2/";
+
+        File f = new File(path);
+        if (!f.exists()) {
+            f.mkdirs();
+        }
+
+        return path;
     }
 
 

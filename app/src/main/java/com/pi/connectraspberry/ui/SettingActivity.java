@@ -2,8 +2,13 @@ package com.pi.connectraspberry.ui;
 
 import static android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -14,16 +19,23 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.lxj.xpopup.XPopup;
+import com.lxj.xpopup.impl.AttachListPopupView;
+import com.lxj.xpopup.impl.CenterListPopupView;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.lxj.xpopup.interfaces.OnInputConfirmListener;
+import com.lxj.xpopup.interfaces.OnSelectListener;
 import com.pi.connectraspberry.R;
+import com.pi.connectraspberry.TestActivity;
 import com.pi.connectraspberry.bean.ConfigBean;
+import com.pi.connectraspberry.bean.EventBusBean;
+import com.pi.connectraspberry.bean.EventbusType;
 import com.pi.connectraspberry.util.DensityUtil;
 import com.pi.connectraspberry.util.FileUtils;
 import com.pi.connectraspberry.util.MyCommand;
@@ -31,11 +43,13 @@ import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.SpUtils;
 import com.pi.connectraspberry.util.ThreadUtil;
 
+import org.greenrobot.eventbus.EventBus;
+
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SettingActivity extends BaseActivity implements View.OnClickListener {
-
 
     private static final String TAG = "SettingActivity";
     private TextView tvTime;
@@ -44,7 +58,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private TextView tvBright;
     private TextView tvContrast;
 
-
     private int seconds;//播放时长
     private int hue;//色调调整偏移范围为0至360
     private int sat;//饱和度调整范围为-100至100
@@ -52,7 +65,9 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private int contrast;//对比度调整范围为-100至100
     private boolean auto;//是否是自动切换模式
     private TextView tvMode;//自动、手动模式
-
+    private TextView tvLanguage;//语言
+    private LinearLayout llSetting;
+    private ConstraintLayout clSat;
 
     @Override
     protected int getLayoutId() {
@@ -75,13 +90,16 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvSat = findViewById(R.id.tvSat);
         tvBright = findViewById(R.id.tvBright);
         tvContrast = findViewById(R.id.tvContrast);
+        tvLanguage = findViewById(R.id.tvLanguage);
+        llSetting = findViewById(R.id.llSetting);
 
         ConstraintLayout clTime = findViewById(R.id.clTime);
         ConstraintLayout clHue = findViewById(R.id.clHue);
-        ConstraintLayout clSat = findViewById(R.id.clSat);
+        clSat = findViewById(R.id.clSat);
         ConstraintLayout clBright = findViewById(R.id.clBright);
         ConstraintLayout clContrast = findViewById(R.id.clContrast);
         ConstraintLayout clSwitch = findViewById(R.id.clSwitch);
+        ConstraintLayout clLanguage = findViewById(R.id.clLanguage);
 
         clTime.setOnClickListener(this);
         clHue.setOnClickListener(this);
@@ -90,6 +108,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         clContrast.setOnClickListener(this);
         tvReset.setOnClickListener(this);
         clSwitch.setOnClickListener(this);
+        clLanguage.setOnClickListener(this);
 
     }
 
@@ -110,7 +129,28 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvContrast.setText(contrast + "");
         tvMode.setText(auto ? getResources().getString(R.string.automatic_mode) : getResources().getString(R.string.manual_mode));
 
+
+        String languagePreference = SpUtils.getLanguagePreference();
+
+        switch (languagePreference) {
+
+            case "zh":
+                tvLanguage.setText("中文");
+
+                break;
+            case "en":
+                tvLanguage.setText("English");
+
+                break;
+            case "ja":
+                tvLanguage.setText("日本語");
+                break;
+
+        }
+
+
     }
+
 
     @Override
     public void onClick(View view) {
@@ -152,10 +192,67 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 resetConfig();
                 break;
 
+            case R.id.clLanguage:
+                //重置設置
+                choose();
+                break;
 
         }
 
     }
+
+
+    private void choose() {
+        new XPopup.Builder(this).atView(clSat).asCenterList(getResources().getString(R.string.choose_language), new String[]{"中文", "English", "日本語"}, new OnSelectListener() {
+            @Override
+            public void onSelect(int position, String text) {
+                //toast("click " + text);
+
+                String languageCode = "en";
+                switch (position) {
+
+                    case 0:
+                        languageCode = "zh";
+
+                        break;
+                    case 1:
+                        languageCode = "en";
+//                        SpUtils.setLanguagePreference("en");
+                        //updateLanguage("en");
+                        break;
+                    case 2:
+//                        SpUtils.setLanguagePreference("ja");
+                        //updateLanguage("ja");
+                        languageCode = "ja";
+                        break;
+
+                }
+                SpUtils.setLanguagePreference(languageCode);
+//                updateLanguage(languageCode);
+                tvLanguage.setText(text);
+//                EventBus.getDefault().post(new EventBusBean(EventbusType.Language, languageCode));
+                Log.d(TAG, "选中的是:" + text + "," + position);
+                restart_app_notice();
+            }
+        }).show();
+
+    }
+
+    private void restart_app_notice() {
+
+        new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.restart_app), new OnConfirmListener() {
+            @Override
+            public void onConfirm() {
+
+                Intent intent = new Intent(context, TestActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                android.os.Process.killProcess(android.os.Process.myPid());
+
+            }
+        }).show();
+    }
+
 
     /**
      * 模式切换

@@ -2,9 +2,12 @@ package com.pi.connectraspberry.ui;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -17,9 +20,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.pi.connectraspberry.R;
 import com.pi.connectraspberry.toast.ToastUtil;
 import com.pi.connectraspberry.util.CommUtils;
+import com.pi.connectraspberry.util.SpUtils;
+
+import java.util.Locale;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
+    private static final String TAG = "BaseActivity";
     protected Context context;
 
     @Override
@@ -35,6 +42,16 @@ public abstract class BaseActivity extends AppCompatActivity {
         setContentView(getLayoutId());
         initView();
         initData();
+    }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        String languageCode = SpUtils.getLanguagePreference(); // 从 SharedPreferences等地方获取语言代码
+        Log.d(TAG, "获取保存的语言代码: " + languageCode);
+        Locale locale = new Locale(languageCode);
+        Context context = new ContextWrapper(newBase);
+        context.getResources().getConfiguration().locale = locale;
+        super.attachBaseContext(context);
     }
 
 
@@ -64,6 +81,14 @@ public abstract class BaseActivity extends AppCompatActivity {
         return super.dispatchTouchEvent(ev);
     }
 
+//    protected void updateLanguage(String languageCode) {
+//        Locale locale = new Locale(languageCode);
+//// 创建ContextWrapper对象
+//        Context context = new ContextWrapper(this);
+//        Configuration configuration = context.getResources().getConfiguration();
+//        configuration.locale = locale;
+//        context.getResources().updateConfiguration(configuration, context.getResources().getDisplayMetrics());
+//    }
 
     protected void showToast(String msg) {
 
