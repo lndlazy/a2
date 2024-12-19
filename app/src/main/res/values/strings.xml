@@ -72,7 +72,7 @@
     <string name="clear_data_msg">This operation will clear all historical data</string>
     <string name="get_log">Extraction Log</string>
     <string name="get_log_msg">Are you sure you want to extract the logs of Raspberry Pi？</string>
-    <string name="extraction_fail">Extraction failed!!!</string>
+    <string name="extraction_fail">Extraction failed !!!</string>
     <string name="log_extraction_success">Log extraction successful, saved in A2 directory</string>
 
 </resources>

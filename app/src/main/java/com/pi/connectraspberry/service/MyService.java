@@ -49,7 +49,7 @@ public class MyService extends Service {
             if (manager != null) {
                 manager.createNotificationChannel(serviceChannel);
             }
-        }else {
+        } else {
             Notification notification = new NotificationCompat.Builder(this, "channel_id")
                     .setContentTitle("Boundless")
 //                .setContentText("Service is running")
@@ -117,6 +117,7 @@ public class MyService extends Service {
 
         Log.d(TAG, "开始连接");
         if (SocketSender.isConnect()) {
+            Log.d(TAG, "已连接，不用再连接");
             sendConnectSuccess();
             return;
         }

@@ -129,11 +129,10 @@ public class SocketSender {
                 }
 //                }
             } catch (Exception e) {
-
+                e.printStackTrace();
+                closeSocket();
                 if (socketListener != null)
                     socketListener.onConnectLost();
-
-                e.printStackTrace();
             }
 
         }
@@ -163,7 +162,7 @@ public class SocketSender {
 
             int offset = 0;
             int bytesRead;
-            while ((bytesRead = is.read(logBuffer, offset, logBuffer.length - offset))!= -1) {
+            while ((bytesRead = is.read(logBuffer, offset, logBuffer.length - offset)) != -1) {
                 offset += bytesRead;
                 if (offset >= logBuffer.length) {
                     break;
@@ -187,7 +186,6 @@ public class SocketSender {
         }
 
     }
-
 
 
     private static void folderCmd() {
@@ -444,6 +442,7 @@ public class SocketSender {
             OutputStream outputStream = socket.getOutputStream();
             //String str = "STR:" + commandConvert;
             //命令开始
+
             outputStream.write(MyCommand.CMD_START.getBytes(StandardCharsets.UTF_8));
             //指令长度
             outputStream.write(longToByteArray(msg.length()));
@@ -524,15 +523,19 @@ public class SocketSender {
                 socket.close();
             }
 
+            Log.d(TAG, "关闭socket");
             if (timer != null) {
                 timer.cancel();
             }
+            Log.d(TAG, "timer");
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            socket = null;
-            timer = null;
         }
+
+        socket = null;
+        timer = null;
+        Log.d(TAG, "关闭连接，socket置空");
+
 
     }
 
