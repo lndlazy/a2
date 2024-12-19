@@ -114,9 +114,14 @@ public class SocketSender {
                             // 接收指令数据长度
                             cmdCommand();
 
-
                         } else if (MyCommand.CMD_FOL.equals(messageFromServer)) {
+
                             folderCmd();
+                        } else if (MyCommand.LOG_START.equals(messageFromServer)) {
+
+                            //提取日志
+                            extractionLog();
+
                         }
 
                     }
@@ -133,6 +138,57 @@ public class SocketSender {
 
         }
     };
+
+    private static void extractionLog() {
+
+        //接受日志文件名长度
+        try {
+            byte[] nameLen = new byte[4];
+            is.read(nameLen);
+            int nameLength = ByteBuffer.wrap(nameLen).getInt();
+            Log.d(TAG, "日志文件名长度====>" + nameLength);
+            // 接收日志名称数据
+            byte[] nameLenBuffer = new byte[nameLength];
+            is.read(nameLenBuffer);
+            String logFileName = new String(nameLenBuffer);
+            Log.d(TAG, "日志文件名称:" + logFileName);
+
+            // 接收日志数据长度
+            byte[] lengthBuffer = new byte[4];
+            int read1 = is.read(lengthBuffer);
+            int logDataLength = ByteBuffer.wrap(lengthBuffer).getInt();
+            Log.d(TAG, "日志内容长度====>" + logDataLength + ",read1:" + read1);
+            // 接收图片数据
+            byte[] logBuffer = new byte[logDataLength];
+
+            int offset = 0;
+            int bytesRead;
+            while ((bytesRead = is.read(logBuffer, offset, logBuffer.length - offset))!= -1) {
+                offset += bytesRead;
+                if (offset >= logBuffer.length) {
+                    break;
+                }
+            }
+
+            byte[] result;
+            if (offset < logBuffer.length) {
+                result = new byte[offset];
+                System.arraycopy(logBuffer, 0, result, 0, offset);
+            } else {
+                result = logBuffer;
+            }
+
+            //int read2 = is.read(logBuffer);
+            Log.d(TAG, " 读取日志内容结束:: " + result.length);
+            //保存压缩文件到本地
+            FileUtils.saveTextToFile(result, logFileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
 
     private static void folderCmd() {
         try {
@@ -156,7 +212,7 @@ public class SocketSender {
             //List<String> md5List = JSONObject.parseArray(md5Json, String.class);
             //FolderBean folderBean = JSONObject.parseObject(md5Json, FolderBean.class);
             EventBus.getDefault().post(keyList2);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -171,7 +227,7 @@ public class SocketSender {
             int read2 = is.read(cmdBuffer);
             //获取指令内容
             String cmd = new String(cmdBuffer);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -202,7 +258,7 @@ public class SocketSender {
             //保存图片到相册
             Bitmap bitmap = BitmapFactory.decodeByteArray(imageBuffer, 0, imageBuffer.length);
             ImageUtil.saveImageToGallery(MyApplication.getInstance(), bitmap, fileName);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -219,7 +275,7 @@ public class SocketSender {
             String notice = new String(cmdBuffer);
             Log.d(TAG, "发送eventbus=>" + notice);
             EventBus.getDefault().post("back:" + notice);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

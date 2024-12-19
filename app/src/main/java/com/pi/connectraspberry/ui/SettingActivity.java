@@ -2,21 +2,10 @@ package com.pi.connectraspberry.ui;
 
 import static android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -26,28 +15,21 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.lxj.xpopup.XPopup;
-import com.lxj.xpopup.impl.AttachListPopupView;
-import com.lxj.xpopup.impl.CenterListPopupView;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
-import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.lxj.xpopup.interfaces.OnSelectListener;
 import com.pi.connectraspberry.R;
-import com.pi.connectraspberry.TestActivity;
+import com.pi.connectraspberry.HomeActivity;
 import com.pi.connectraspberry.bean.ConfigBean;
 import com.pi.connectraspberry.bean.EventBusBean;
 import com.pi.connectraspberry.bean.EventbusType;
-import com.pi.connectraspberry.util.DensityUtil;
 import com.pi.connectraspberry.util.FileUtils;
 import com.pi.connectraspberry.util.MyCommand;
 import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.SpUtils;
-import com.pi.connectraspberry.util.ThreadUtil;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.File;
 
 public class SettingActivity extends BaseActivity implements View.OnClickListener {
 
@@ -100,6 +82,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         ConstraintLayout clContrast = findViewById(R.id.clContrast);
         ConstraintLayout clSwitch = findViewById(R.id.clSwitch);
         ConstraintLayout clLanguage = findViewById(R.id.clLanguage);
+        ConstraintLayout clClearData = findViewById(R.id.clClearData);
+        ConstraintLayout clGetLog = findViewById(R.id.clGetLog);
 
         clTime.setOnClickListener(this);
         clHue.setOnClickListener(this);
@@ -109,6 +93,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvReset.setOnClickListener(this);
         clSwitch.setOnClickListener(this);
         clLanguage.setOnClickListener(this);
+        clClearData.setOnClickListener(this);
+        clGetLog.setOnClickListener(this);
 
     }
 
@@ -129,7 +115,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvContrast.setText(contrast + "");
         tvMode.setText(auto ? getResources().getString(R.string.automatic_mode) : getResources().getString(R.string.manual_mode));
 
-
         String languagePreference = SpUtils.getLanguagePreference();
 
         switch (languagePreference) {
@@ -148,9 +133,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
 
         }
 
-
     }
-
 
     @Override
     public void onClick(View view) {
@@ -193,14 +176,103 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 break;
 
             case R.id.clLanguage:
-                //重置設置
+                //选择语言
                 choose();
+                break;
+
+            case R.id.clClearData:
+                //清除数据
+                showClearDataDialog();
+                break;
+
+            case R.id.clGetLog:
+                //提取日志
+                extractionLog();
                 break;
 
         }
 
     }
 
+    private void extractionLog() {
+
+        new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.get_log_msg), new OnConfirmListener() {
+            @Override
+            public void onConfirm() {
+                //toast("click confirm");
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        boolean b = SocketSender.sendCommand(MyCommand.Extraction_log);
+
+                        if (b) {
+                            //showToast(getResources().getString(R.string.clear_success));
+
+                        } else {
+                            showToast(getResources().getString(R.string.extraction_fail));
+                        }
+
+                    }
+                }).start();
+            }
+        }).show();
+
+
+    }
+
+    private void showClearDataDialog() {
+
+        new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.clear_data_msg), this::clearData).show();
+
+    }
+
+    /**
+     * 清除数据
+     */
+    private void clearData() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                boolean b = SocketSender.sendCommand(MyCommand.CLEAR_DATA);
+
+                if (b) {
+                    showToast(getResources().getString(R.string.clear_success));
+                    EventBus.getDefault().post(new EventBusBean(EventbusType.CLEAR_MD5, ""));
+                    //删除所有目录
+                    clearFiles();
+                } else {
+                    showToast(getResources().getString(R.string.clear_fail));
+                }
+
+            }
+        }).start();
+
+    }
+
+
+    private void clearFiles() {
+
+        File folder = new File(FileUtils.getLocalBasePath());
+
+        if (folder.exists()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        // 如果是子文件夹，递归调用删除方法
+                        String name = file.getName();
+                        Log.d(TAG, "文件名称：" + name);
+                        FileUtils.deleteDirectory(new File(FileUtils.getLocalBasePath() + name));
+
+                    }
+                }
+            }
+
+        }
+
+    }
 
     private void choose() {
         new XPopup.Builder(this).atView(clSat).asCenterList(getResources().getString(R.string.choose_language), new String[]{"中文", "English", "日本語"}, new OnSelectListener() {
@@ -244,7 +316,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             @Override
             public void onConfirm() {
 
-                Intent intent = new Intent(context, TestActivity.class);
+                Intent intent = new Intent(context, HomeActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
                 android.os.Process.killProcess(android.os.Process.myPid());

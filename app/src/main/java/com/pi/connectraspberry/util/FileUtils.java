@@ -22,14 +22,19 @@ public class FileUtils {
 
     private static final String TAG = "FileUtils";
 
-//    /**
-//     * 系统a2目录
-//     *
-//     * @return
-//     */
-//    public static String getBasePath() {
-//        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/a2/";
-//    }
+    /**
+     * 系统a2目录
+     *
+     * @return
+     */
+    public static String getBasePath() {
+        String path = Environment.getExternalStorageDirectory() + "/A2/";
+        File file = new File(path);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return path;
+    }
 
     /**
      * 获取应用目录
@@ -286,5 +291,29 @@ public class FileUtils {
         }
 
         return true;
+    }
+
+    public static void saveTextToFile(byte[] logBytes, String fileName) {
+        // 检查外部存储是否可用
+        if (isExternalStorageWritable()) {
+            File file = new File(getBasePath(), fileName);
+            try {
+
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write(logBytes);
+                fos.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
     }
 }

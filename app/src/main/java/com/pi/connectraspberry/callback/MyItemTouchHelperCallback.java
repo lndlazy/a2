@@ -1,12 +1,11 @@
 package com.pi.connectraspberry.callback;
 
-import android.net.Uri;
 import android.util.Log;
 
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.pi.connectraspberry.TestActivity;
+import com.pi.connectraspberry.HomeActivity;
 import com.pi.connectraspberry.ui.ClassifyDetailActivity;
 
 import java.util.Collections;
@@ -86,8 +85,8 @@ public class MyItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
             try {
 
-                if (adapter instanceof TestActivity.MyImageAdapter) {
-                    TestActivity.MyImageAdapter myImageAdapter = (TestActivity.MyImageAdapter) adapter;
+                if (adapter instanceof HomeActivity.MyImageAdapter) {
+                    HomeActivity.MyImageAdapter myImageAdapter = (HomeActivity.MyImageAdapter) adapter;
                     myImageAdapter.restoreImageSize();
                 }
 

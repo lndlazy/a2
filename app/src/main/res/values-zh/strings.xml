@@ -67,6 +67,14 @@
     <string name="language">语言</string>
     <string name="choose_language">选择语言</string>
     <string name="restart_app">需要重启APP生效</string>
+    <string name="clear_data">清除数据</string>
+    <string name="clear_success">清除成功</string>
+    <string name="clear_fail">清除失败</string>
+    <string name="clear_data_msg">此操作会清除所有历史数据</string>
+    <string name="get_log">提取日志</string>
+    <string name="get_log_msg">确定要提取树莓派的日志吗？</string>
+    <string name="extraction_fail">提取失败</string>
+    <string name="log_extraction_success">日志提取成功，已保存在A2目录下</string>
 
 
 </resources>

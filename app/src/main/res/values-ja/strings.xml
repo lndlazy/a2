@@ -66,5 +66,13 @@
     <string name="language">言語</string>
     <string name="choose_language">言語の選択</string>
     <string name="restart_app">アプリの有効化を再起動する必要があります</string>
+    <string name="clear_data">データの消去</string>
+    <string name="clear_success">パージ成功</string>
+    <string name="clear_fail">パージ失敗</string>
+    <string name="clear_data_msg">これにより、すべての履歴データが消去されます</string>
+    <string name="get_log">ログの抽出</string>
+    <string name="get_log_msg">ラズベリーパイのログを抽出しますか？</string>
+    <string name="extraction_fail">抽出に失敗しました</string>
+    <string name="log_extraction_success">ログの抽出に成功し、A 2ディレクトリに保存されました</string>
 
 </resources>

@@ -12,4 +12,5 @@ public interface EventMsg {
 
     String CLEAR_PIC_DATA = "CLEAR_PIC_DATA";
 
+    String LOG_SUCCESS = "LOG_SUCCESS";
 }

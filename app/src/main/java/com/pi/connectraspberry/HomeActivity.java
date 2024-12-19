@@ -11,8 +11,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -37,7 +35,6 @@ import com.pi.connectraspberry.util.MD5Util;
 import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ImageUtil;
 import com.pi.connectraspberry.util.MyCommand;
-import com.pi.connectraspberry.util.SpUtils;
 import com.pi.connectraspberry.util.ThreadUtil;
 
 import org.greenrobot.eventbus.EventBus;
@@ -46,17 +43,14 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import me.jingbin.library.ByRecyclerView;
 import me.jingbin.library.adapter.BaseByViewHolder;
 import me.jingbin.library.adapter.BaseRecyclerAdapter;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class TestActivity extends BaseActivity implements View.OnClickListener {
+public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
     private static final String TAG = "TestActivity";
     private static final int RC_CAMERA_PERM = 33;
@@ -158,7 +152,11 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
         if (message.startsWith("back:")) {
             String msg = message.substring(5);
-            showToast(msg);
+
+            if (EventMsg.LOG_SUCCESS.equals(msg))
+                showToast(getResources().getString(R.string.log_extraction_success));
+             else
+                showToast(msg);
 
             //Log.d(TAG, "接受到返回的消息: " + message);
             if (message.contains("convert "))
@@ -171,6 +169,10 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
 
             case EventMsg.CONNECT_SUCCESS:
                 break;
+
+//            case EventMsg.LOG_SUCCESS:
+//                showToast(getResources().getString(R.string.log_extraction_success));
+//                break;
 
             case EventMsg.CONNECT_SUCCESS_STATUS:// 显示连接成功状态
                 connectSuccessStatus();
@@ -190,28 +192,34 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
     }
 
 
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onEvent(EventBusBean eventBusBean) {
-//
-//        if (eventBusBean == null)
-//            return;
-//
-//        if (TextUtils.isEmpty(eventBusBean.getType()))
-//            return;
-//
-//        switch (eventBusBean.getType()) {
-//
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(EventBusBean eventBusBean) {
+
+        if (eventBusBean == null)
+            return;
+
+        if (TextUtils.isEmpty(eventBusBean.getType()))
+            return;
+
+        switch (eventBusBean.getType()) {
+
 //            case EventbusType.Language:
 //                //切换
 ////                updateLanguage(SpUtils.getLanguagePreference());
 //                Log.d(TAG, "更新语言:" + eventBusBean.getMessage());
 //                updateLanguage(eventBusBean.getMessage());
 //                break;
-//
-//
-//        }
-//
-//    }
+            case EventbusType.CLEAR_MD5:
+                //切换
+//                updateLanguage(SpUtils.getLanguagePreference());
+                Log.d(TAG, "清除md5");
+                raspMd5List.clear();
+
+                break;
+
+        }
+
+    }
 
 
     private List<String> raspMd5List = new ArrayList<>();
@@ -617,22 +625,6 @@ public class TestActivity extends BaseActivity implements View.OnClickListener {
                     }
                     picNum++;
                 }
-
-//                for (Map.Entry<String, String> entry : appMd5Map.entrySet()) {
-//                    String md5 = entry.getKey();
-//                    String path = entry.getValue();
-//                    Log.d(TAG, "key:" + md5 + ",value:" + path);
-//                    //如果raspMd5Map里面没有这个md5值，就发送图片
-//                    picName = "picture_" + picNum + ".bmp";
-//
-//                    if (!raspMd5List.contains(md5)) {
-//                        //发送图片
-//                        SocketSender.sendPic(classifyName, picName, path);
-//                    } else {
-//                        SocketSender.sendPicMd5(classifyName, picName, md5);
-//                    }
-//                    picNum++;
-//                }
 
                 runOnUiThread(() -> {
                     hideProgressDialog();

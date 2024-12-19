@@ -145,7 +145,7 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                     return;
                 }
 
-                showLoadingDialog();
+                showLoadingDialog(getResources().getString(R.string.sending));
                 new Thread(() -> {
 
                     try {
@@ -212,12 +212,13 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
     ProgressDialog progressDialog;
 
-    private void showLoadingDialog() {
+    private void showLoadingDialog(String msg) {
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(this);
-            progressDialog.setMessage(getResources().getString(R.string.loading));
             progressDialog.setCancelable(true);
         }
+        hideLoadingDialog();
+        progressDialog.setMessage(msg);
         progressDialog.show();
     }
 
@@ -236,11 +237,9 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 Log.d(TAG, "多张图片,数量:" + data.getClipData().getItemCount());
                 int count = data.getClipData().getItemCount();
 
-                hideLoadingDialog();
-                showLoadingDialog();
+                showLoadingDialog(getResources().getString(R.string.loading));
 
                 try {
-
                     copyPicture(data, count);
                 } catch (Exception e) {
                     MLogger.e("复制图片失败:" + e.getMessage());
