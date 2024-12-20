@@ -28,7 +28,8 @@ public class FileUtils {
      * @return
      */
     public static String getBasePath() {
-        String path = Environment.getExternalStorageDirectory() + "/A2/";
+//        String path = Environment.getExternalStorageDirectory() + "/A2/";
+        String path = MyApplication.getInstance().getExternalCacheDir() + "/A2/";
         File file = new File(path);
         if (!file.exists()) {
             file.mkdirs();
@@ -43,8 +44,9 @@ public class FileUtils {
      */
     public static String getLocalBasePath() {
 
-        String path = MyApplication.getInstance().getFilesDir() + "/a2/";
+        String path = MyApplication.getInstance().getExternalCacheDir() + "/a2/";
 
+        Log.d(TAG, "路径：" + path);
         File f = new File(path);
         if (!f.exists()) {
             f.mkdirs();

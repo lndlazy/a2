@@ -86,8 +86,15 @@ public class ClassifyActivity extends BaseActivity {
                                     return;
                                 }
 
+
+                                if (!SocketSender.isConnect()) {
+                                    showToast(getResources().getString(R.string.connect_lost));
+                                    return;
+                                }
+
                                 boolean success = FileUtils.createFile(text);
 
+                                Log.d(TAG, "文件夹是否创建成功:" + success);
                                 if (!success) {
                                     showToast(getResources().getString(R.string.add_classify_fail));
                                     return;
@@ -223,6 +230,12 @@ public class ClassifyActivity extends BaseActivity {
                             @Override
                             public void onConfirm() {
                                 //toast("click confirm");
+
+
+                                if (!SocketSender.isConnect()) {
+                                    showToast(getResources().getString(R.string.connect_lost));
+                                    return;
+                                }
 
                                 int i = FileUtils.deleteDirectory(new File(FileUtils.getLocalBasePath() + name));
                                 if (i == 0) {
