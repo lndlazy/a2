@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -14,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ImageUtil {
 
@@ -32,6 +34,53 @@ public class ImageUtil {
 
         return filePath;
     }
+
+
+    public static Bitmap scaleBitmap(Bitmap bitmap, int newWidth, int newHeight) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        // 计算缩放比例
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        // 创建Matrix对象
+        Matrix matrix = new Matrix();
+        // 设置缩放比例
+        matrix.postScale(scaleWidth, scaleHeight);
+        // 生成新的Bitmap
+        return Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+    }
+
+
+    public static void saveBitmapToFile(Bitmap bitmap, File imageFile) {
+        // 获取外部存储目录，通常是SD卡
+//        File directory = Environment.getExternalStorageDirectory();
+//        // 创建保存文件的目录
+//        File imageFolder = new File(directory, UUID.randomUUID().toString() "MyImages");
+//        if (!imageFolder.exists()) {
+//            imageFolder.mkdirs();
+//        }
+//        // 创建保存文件
+//        File imageFile = new File(imageFolder, fileName);
+        try {
+            FileOutputStream fos = new FileOutputStream(imageFile);
+            // 保存为PNG格式，可根据需要修改为JPEG等格式
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+//        public static void main(String[] args) {
+//            // 假设这里有一个图片文件的路径
+//            String imagePath = "path/to/your/image.jpg";
+//            // 加载原始图片
+//            Bitmap originalBitmap = BitmapFactory.decodeFile(imagePath);
+//            // 设定保存的文件名
+//            String fileName = "saved_image.png";
+//            saveBitmapToFile(originalBitmap, fileName);
+//        }
 
 
 //    public static void convertImageToBmp(String inputImagePath, String outputBmpPath) {

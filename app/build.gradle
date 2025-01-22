@@ -52,5 +52,10 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.3.1'
     implementation 'com.alibaba:fastjson:1.2.78'
 
+    implementation 'com.github.yalantis:ucrop:2.2.6'
+
 //    implementation 'com.github.vilyever:AndroidSocketClient:3.0.3'
+
+//    implementation 'com.github.iamutkarshtiwari:Android-Image-Converter:1.0.3' // 使用最新版本
+
 }
