@@ -235,6 +235,9 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             @Override
             public void run() {
 
+
+                FileUtils.clearInternalCache(SettingActivity.this);
+
                 boolean b = SocketSender.sendCommand(MyCommand.CLEAR_DATA);
 
                 if (b) {
@@ -243,9 +246,10 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                     //删除所有目录
                     clearFiles();
                 } else {
-                    showToast(getResources().getString(R.string.clear_fail));
+                   // showToast(getResources().getString(R.string.clear_fail));
                 }
 
+                showToast(getResources().getString(R.string.clear_success));
             }
         }).start();
 

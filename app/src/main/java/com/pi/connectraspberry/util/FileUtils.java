@@ -1,5 +1,6 @@
 package com.pi.connectraspberry.util;
 
+import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.text.Spannable;
@@ -229,6 +230,9 @@ public class FileUtils {
 
         try {
 
+            //删除文件targetFile
+
+
             InputStream inputStream = new FileInputStream(sourceFile);
             OutputStream outputStream = new FileOutputStream(targetFile);
 
@@ -264,6 +268,14 @@ public class FileUtils {
 
     }
 
+    public static boolean isBMPPic(String filePath) {
+
+        String imageExtension = getFileExtension(filePath);
+        //非bmp格式图片不处理
+        return "bmp".equalsIgnoreCase(imageExtension);
+
+    }
+
     public static String getFileExtension(String filePath) {
         if (filePath != null && filePath.lastIndexOf('.') != -1) {
             return filePath.substring(filePath.lastIndexOf('.') + 1);
@@ -271,7 +283,7 @@ public class FileUtils {
         return "";
     }
 
-    private static boolean isSizeNormal(String bmpFilePath) {
+    public static boolean isSizeNormal(String bmpFilePath) {
 
         try {
 
@@ -318,5 +330,25 @@ public class FileUtils {
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state);
+    }
+
+
+    public static void clearInternalCache(Context context) {
+        File cacheDir = context.getCacheDir();
+        if (cacheDir != null && cacheDir.isDirectory()) {
+            deleteMyDirectory(cacheDir);
+        }
+    }
+    private static boolean deleteMyDirectory(File directory) {
+        if (directory != null && directory.isDirectory()) {
+            String[] children = directory.list();
+            for (String child : children) {
+                boolean success = deleteMyDirectory(new File(directory, child));
+                if (!success) {
+                    return false;
+                }
+            }
+        }
+        return directory.delete();
     }
 }

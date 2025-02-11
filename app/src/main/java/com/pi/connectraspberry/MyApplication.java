@@ -7,6 +7,8 @@ import com.orhanobut.logger.DiskLogAdapter;
 import com.orhanobut.logger.FormatStrategy;
 import com.orhanobut.logger.Logger;
 import com.orhanobut.logger.PrettyFormatStrategy;
+import com.pi.connectraspberry.ui.SettingActivity;
+import com.pi.connectraspberry.util.FileUtils;
 
 public class MyApplication extends Application {
 
@@ -25,6 +27,7 @@ public class MyApplication extends Application {
 
         instance = this;
 
+        FileUtils.clearInternalCache(this);
 
         Logger.addLogAdapter(new DiskLogAdapter());
 

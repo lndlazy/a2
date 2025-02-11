@@ -7,9 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
@@ -21,7 +19,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 
@@ -35,7 +32,6 @@ import com.pi.connectraspberry.toast.ToastUtil;
 import com.pi.connectraspberry.ui.BaseActivity;
 import com.pi.connectraspberry.ui.ClassifyActivity;
 import com.pi.connectraspberry.ui.SettingActivity;
-import com.pi.connectraspberry.util.BMPConverter;
 import com.pi.connectraspberry.util.BMPUtils;
 import com.pi.connectraspberry.util.CommUtils;
 import com.pi.connectraspberry.util.FileUtils;
@@ -45,7 +41,6 @@ import com.pi.connectraspberry.util.ImageUtil;
 import com.pi.connectraspberry.util.MyCommand;
 import com.pi.connectraspberry.util.ThreadUtil;
 import com.yalantis.ucrop.UCrop;
-import com.yalantis.ucrop.callback.BitmapCropCallback;
 import com.yalantis.ucrop.callback.BitmapLoadCallback;
 import com.yalantis.ucrop.model.AspectRatio;
 import com.yalantis.ucrop.model.ExifInfo;
@@ -56,7 +51,6 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -68,7 +62,7 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
-    private static final String TAG = "TestActivity";
+    private static final String TAG = "HomeActivity";
     private static final int RC_CAMERA_PERM = 33;
     private ByRecyclerView tvRecyclerView;
     //    private EditText etSecond;
@@ -474,6 +468,11 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                 Log.d(TAG, "多张图片,数量:" + data.getClipData().getItemCount());
                 int count = data.getClipData().getItemCount();
 
+
+                int beginIndex = 0;
+                if (alreadyList.size() > 0)
+                    beginIndex = alreadyList.size();
+
                 for (int i = 0; i < count; i++) {
 
                     if (alreadyList.size() >= 9) {
@@ -481,33 +480,45 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                         break;
                     }
 
-                    //alreadyList.clear();
                     originalUri = data.getClipData().getItemAt(i).getUri();
-                    // 处理每张图片的Uri
-//                    Log.d(TAG, "多张图片,每张的url:" + imageUri);
-//                    ImageUtil.getPathFromUri(this, imageUri);
-//                    if (!alreadyList.contains(imageUri))
-                    String pathFromUri = ImageUtil.getPathFromUri(this, originalUri);
 
-                    //判断是否是符合像素要求的bmp格式的图片
-                    boolean standardPic = FileUtils.isStandardPic(pathFromUri);
-                    if (!standardPic) {
-                        //不合规的图片进行修改
-                        resetPic();
+                    String pathFromUri = ImageUtil.getPathFromUri(this, originalUri);
+                    int currentIndex = beginIndex + i;
+                    Log.d(TAG, "图片路径 ：：" + pathFromUri + ",===> beginIndex:" + currentIndex);
+
+                    alreadyList.add("");
+                    //判断是否是BMP图片
+                    if (FileUtils.isBMPPic(pathFromUri)) {
+
+                        if (FileUtils.isSizeNormal(pathFromUri)) {
+                            //既是BMP图片，且像素符合要求
+                            addPic(currentIndex, pathFromUri);
+                        } else {
+                            //BMP图片不符合像素要求，裁剪图片
+                            resetPic(currentIndex);
+                        }
 
                     } else {
-
-                        alreadyList.add(pathFromUri);
-                        if (mAdapter != null)
-                            mAdapter.notifyDataSetChanged();
+                        //不是BMP图片，判断尺寸是否满足
+                        resetPic(currentIndex);
+//                        if (FileUtils.isSizeNormal(pathFromUri)) {
+//                            //尺寸满足，进行转换
+//                            handleCropResult(ImageUtil.getUri(new File(pathFromUri)), null);
+//                        } else {
+//                            //尺寸不满足，裁剪
+//                            resetPic();
+//                        }
 
                     }
+
 
                 }
             }
         } else if (requestCode == UCrop.REQUEST_CROP && resultCode == RESULT_OK) {
-            // 处理裁剪结果
-            handleCropResult(data, originalUri);
+            //处理裁剪结果
+            Uri resultUri = UCrop.getOutput(data);
+
+            handleCropResult(resultUri, originalUri);
 
         } else {
             Log.d(TAG, "other ===》》 ");
@@ -523,7 +534,19 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
     }
 
-    private void resetPic() {
+
+    private void addPic(int index, String pathFromUri) {
+
+        alreadyList.set(index, pathFromUri);
+//        if (head)
+//            alreadyList.add(0, pathFromUri);
+//        else
+//            alreadyList.add(pathFromUri);
+        if (mAdapter != null)
+            mAdapter.notifyDataSetChanged();
+    }
+
+    private void resetPic(int i) {
         UCrop.Options options = new UCrop.Options();
 // 可以设置裁剪界面的各种属性，如裁剪框的颜色、背景色等
 //                    options.setToolbarColor(ContextCompat.getColor(this, android.R.color.background_light));
@@ -534,18 +557,19 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         options.withMaxResultSize(2160, 3060);
 //                    options.setCompressionMaxWidth(2160);
 //                    options.setCompressionMaxHeight(3060);
-        UCrop.of(originalUri, Uri.fromFile(new File(getCacheDir(), UUID.randomUUID() + ".jpg")))
+        UCrop.of(originalUri, Uri.fromFile(new File(getCacheDir(), UUID.randomUUID() + "_" + i + ".jpg")))
                 .withOptions(options)
                 .start(this);
     }
 
 
     // 缩放图片
+    private void handleCropResult(Uri resultUri, Uri originalUri) {
+//        final Uri resultUri = UCrop.getOutput(data);
 
-    private void handleCropResult(Intent data, Uri originalUri) {
-        final Uri resultUri = UCrop.getOutput(data);
+        Log.d(TAG, "resultUri:" + resultUri.getPath());
 
-        Log.d(TAG, "originalUri:" + originalUri + ",resultUri==>" + resultUri);
+//        Log.d(TAG, "originalUri:" + originalUri + ",resultUri==>" + resultUri);
         if (resultUri != null) {
             try {
                 // 获取裁剪后的图片
@@ -569,11 +593,25 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 //                        String newPath =  UUID.randomUUID() + ".bmp";
                         File file = new File(getCacheDir(), UUID.randomUUID() + ".bmp");
                         BMPUtils.convertToBMP(scaledBitmap, file.getPath());
-                        alreadyList.add(file.getPath());
-                        if (mAdapter != null)
-                            mAdapter.notifyDataSetChanged();
 
-                        Log.d(TAG, "  ===转成bmp格式成功===  " + file.getPath());
+                        //判断制作好的BMP图片是否符合像素要求
+                        boolean standardPic = FileUtils.isStandardPic(file.getPath());
+                        if (standardPic) {
+
+                            //获取imageInputPath文件名的最后一位
+                            int position = 0;
+                            int index = imageInputPath.lastIndexOf(".");
+                            String fileName = imageInputPath.substring(index - 1, index);
+                            position = Integer.parseInt(fileName);
+
+                            addPic(position, file.getPath());
+                            Log.d(TAG, "  ===转成bmp格式成功===  " + file.getPath());
+
+                        } else {
+                            showToast("图片转换失败！");
+                            Log.e(TAG, "  ===转成bmp格式失败!!!!!!!!!!!! ===  " + file.getPath());
+                        }
+
                     }
 
                     @Override
@@ -686,6 +724,12 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
             return;
         }
 
+        Log.d(TAG, "图片张数===>>" + alreadyList.size());
+
+//        for (String s : alreadyList) {
+//            Log.d(TAG, " 图片路径 :" + s);
+//        }
+
         showProgressDialog(getResources().getString(R.string.sending));
 
 //        appMd5Map.clear();
@@ -695,7 +739,14 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         ThreadUtil.getParallelExecutor().execute(() -> {
 
             try {
-                SocketSender.sendCommand(MyCommand.COMMAND_CLEAR_PIC);
+                boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CLEAR_PIC);
+
+                if (!b) {
+                    showToast(getResources().getString(R.string.send_fail));
+                    hideProgressDialog();
+                    return;
+                }
+
                 picNum = 1;
                 String picName = "";
                 //遍历appMd5Map

@@ -7,6 +7,8 @@ import android.telephony.TelephonyManager;
 
 import com.pi.connectraspberry.MyApplication;
 
+import java.util.List;
+
 public class CommUtils {
 
 
@@ -40,5 +42,21 @@ public class CommUtils {
         }
         return phoneInfo;
     }
+
+
+    /**
+     *
+     * @param index
+     * @param value
+     * @param list
+     */
+    public static void exchange(int index, String value, List<String> list) {
+
+        //把list集合中的index位置的元素替换成value
+        list.set(index, value);
+
+
+    }
+
 
 }

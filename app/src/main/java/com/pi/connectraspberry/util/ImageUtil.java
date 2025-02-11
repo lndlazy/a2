@@ -7,8 +7,13 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+
+import androidx.core.content.FileProvider;
+
+import com.pi.connectraspberry.MyApplication;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -185,6 +190,21 @@ public class ImageUtil {
     private static boolean isBMPFile(File file) {
         String fileName = file.getName();
         return fileName.toLowerCase().endsWith(".bmp");
+    }
+
+
+    public static Uri getUri(File imageFile) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+
+            return FileProvider.getUriForFile(
+                    MyApplication.getInstance(),
+                    MyApplication.getInstance().getPackageName() + ".fileprovider",
+                    imageFile);
+//        return imageUri;
+        else
+            return Uri.fromFile(imageFile);
+
     }
 
 }
