@@ -43,6 +43,18 @@
         app:layout_constraintRight_toLeftOf="@id/ivSetting"
         app:layout_constraintTop_toTopOf="@id/ivSetting" />
 
+
+    <ImageView
+        android:id="@+id/ivCheck"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginLeft="15dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@mipmap/ic_check"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="@id/ivClassify" />
+
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clWifi"
         android:layout_width="wrap_content"
@@ -175,19 +187,19 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/clSend" />
 
-<!--    <EditText-->
-<!--        android:id="@+id/etSecond"-->
-<!--        android:layout_width="80dp"-->
-<!--        android:layout_height="30dp"-->
-<!--        android:layout_marginTop="15dp"-->
-<!--        android:background="@color/gray"-->
-<!--        android:hint="60"-->
-<!--        android:paddingLeft="5dp"-->
-<!--        android:textColor="@color/white"-->
-<!--        android:textColorHint="@color/white"-->
-<!--        app:layout_constraintLeft_toLeftOf="parent"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />-->
+    <!--    <EditText-->
+    <!--        android:id="@+id/etSecond"-->
+    <!--        android:layout_width="80dp"-->
+    <!--        android:layout_height="30dp"-->
+    <!--        android:layout_marginTop="15dp"-->
+    <!--        android:background="@color/gray"-->
+    <!--        android:hint="60"-->
+    <!--        android:paddingLeft="5dp"-->
+    <!--        android:textColor="@color/white"-->
+    <!--        android:textColorHint="@color/white"-->
+    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />-->
 
     <ImageView
         android:id="@+id/ivConvert"

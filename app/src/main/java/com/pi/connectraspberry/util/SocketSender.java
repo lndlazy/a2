@@ -267,11 +267,11 @@ public class SocketSender {
             byte[] lengthBuffer = new byte[4];
             int r = is.read(lengthBuffer);
             int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
-            // 接收图片数据
+            Log.d(TAG, "toast内容长度:" + cmdLength);
             byte[] cmdBuffer = new byte[cmdLength];
             int read2 = is.read(cmdBuffer);
             String notice = new String(cmdBuffer);
-            Log.d(TAG, "发送eventbus=>" + notice);
+            Log.d(TAG, "发送eventbus=>" + notice + ",读的长度:" + read2);
             EventBus.getDefault().post("back:" + notice);
         } catch (Exception e) {
             e.printStackTrace();
@@ -326,10 +326,9 @@ public class SocketSender {
     }
 
     /**
-     *
      * @param folderName 文件夹名称
-     * @param picName 图片名称
-     * @param picPath 图片路径
+     * @param picName    图片名称
+     * @param picPath    图片路径
      * @return
      * @throws Exception
      */
@@ -376,9 +375,10 @@ public class SocketSender {
 
     /**
      * 发送图片的md5值
+     *
      * @param folderName 文件夹名称
-     * @param picName 图片名称
-     * @param picMd5 图片md5值
+     * @param picName    图片名称
+     * @param picMd5     图片md5值
      * @return
      */
     public static boolean sendPicMd5(String folderName, String picName, String picMd5) throws Exception {
@@ -413,6 +413,7 @@ public class SocketSender {
 
     /**
      * 获取raspberry的folder文件夹内的所有图片
+     *
      * @param folder
      * @return
      */
@@ -432,8 +433,10 @@ public class SocketSender {
      */
     public static boolean sendCommand(String msg) {
 
-        if (!isConnect())
+        if (!isConnect()) {
+            Log.e(TAG, "未连接!!!");
             return false;
+        }
 
         try {
             if (TextUtils.isEmpty(msg))

@@ -94,6 +94,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         ImageView ivClassify = findViewById(R.id.ivClassify);
         ImageView ivConvert = findViewById(R.id.ivConvert);
         ImageView ivCleanPic = findViewById(R.id.ivCleanPic);
+        ImageView ivCheck = findViewById(R.id.ivCheck);
         ivPreview = findViewById(R.id.ivPreview);
         ImageView ivPre = findViewById(R.id.ivPre);
         ImageView ivNext = findViewById(R.id.ivNext);
@@ -113,6 +114,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         ivSetting.setOnClickListener(this);
         ivClassify.setOnClickListener(this);
         ivCleanPic.setOnClickListener(this);
+        ivCheck.setOnClickListener(this);
 
     }
 
@@ -293,10 +295,11 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
         if (CommUtils.isMainLooper()) {
             showPic(ivWifi, R.mipmap.ic_wifi_gray);
-
+            showToast(getResources().getString(R.string.connect_lost));
         } else
             runOnUiThread(() -> {
                 showPic(ivWifi, R.mipmap.ic_wifi_gray);
+                showToast(getResources().getString(R.string.connect_lost));
             });
     }
 
@@ -704,12 +707,21 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                 clearPic();
                 break;
 
+            case R.id.ivCheck://检查EDP连接情况
+                checkConnect();
+                break;
+
         }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return super.onTouchEvent(event);
+    }
+
+    private void checkConnect() {
+
+        ThreadUtil.getParallelExecutor().execute(checkConnectRunnable);
     }
 
     private void clearPic() {
@@ -804,6 +816,14 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
     Runnable clearPicRunnable = () -> {
         boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CLEAR_PIC);
+        //showToast(b ? "发送成功" : "发送失败");
+        if (!b) {
+            noConnectStatus();
+        }
+    };
+
+    Runnable checkConnectRunnable = () -> {
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CHECK_CONNECT);
         //showToast(b ? "发送成功" : "发送失败");
         if (!b) {
             noConnectStatus();

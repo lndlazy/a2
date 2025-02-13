@@ -17,6 +17,8 @@ public interface MyCommand {
     String deleteFolder = "deleteFolder:";
     String getFolderImgs = "getFolderImgs:";
     String clearFolder = "clearFolder:";
+    String COMMAND_CHECK_CONNECT = "checkConnect:";
+
     //String imageMd5 = "imageMd5:";
 
 
