@@ -37,7 +37,7 @@ public class SocketSender {
 
     private static final String SERVER_IP = "10.0.0.1"; // 替换为树莓派的IP
     private static final int SERVER_PORT = 12345;
-    private static final String TAG = "ImageSender";
+    private static final String TAG = "SocketSender";
     private static Socket socket;
     private static Timer timer;
     private static BufferedReader in;
@@ -85,7 +85,7 @@ public class SocketSender {
 
                     if (read3 > 0) {
 
-                        String messageFromServer = new String(cmdTypeBuffer);
+                        String messageFromServer = new String(cmdTypeBuffer, StandardCharsets.UTF_8);
 
 //                        Log.d(TAG, "接受到了消息:" + messageFromServer + "读取间隔:" + (ssT2 - ssT1) + ",当前时间:" + new Date().toLocaleString() + ",上次" + new Date(lastReceiveTime).toLocaleString());
 
@@ -149,7 +149,7 @@ public class SocketSender {
             // 接收日志名称数据
             byte[] nameLenBuffer = new byte[nameLength];
             is.read(nameLenBuffer);
-            String logFileName = new String(nameLenBuffer);
+            String logFileName = new String(nameLenBuffer, StandardCharsets.UTF_8);
             Log.d(TAG, "日志文件名称:" + logFileName);
 
             // 接收日志数据长度
@@ -200,7 +200,7 @@ public class SocketSender {
             byte[] cmdBuffer = new byte[cmdLength];
             int read2 = is.read(cmdBuffer);
             //获取指令内容 文件夹内图片的md5值
-            String md5Json = new String(cmdBuffer);
+            String md5Json = new String(cmdBuffer, StandardCharsets.UTF_8);
             Log.d(TAG, "文件夹内图片内容: " + md5Json);
             // ["fce429a4c0ad0aeca5cfd07f2f023299"]
             Map<String, Object> map2 = JSON.parseObject(md5Json, new TypeReference<Map<String, Object>>() {
@@ -224,7 +224,7 @@ public class SocketSender {
             byte[] cmdBuffer = new byte[cmdLength];
             int read2 = is.read(cmdBuffer);
             //获取指令内容
-            String cmd = new String(cmdBuffer);
+            String cmd = new String(cmdBuffer, StandardCharsets.UTF_8);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -240,7 +240,7 @@ public class SocketSender {
             // 接收图片名称数据
             byte[] nameLenBuffer = new byte[nameLength];
             is.read(nameLenBuffer);
-            String fileName = new String(nameLenBuffer);
+            String fileName = new String(nameLenBuffer, StandardCharsets.UTF_8);
             Log.d(TAG, "文件名称:" + fileName);
 
             // 接收图片数据长度
@@ -270,7 +270,7 @@ public class SocketSender {
             Log.d(TAG, "toast内容长度:" + cmdLength);
             byte[] cmdBuffer = new byte[cmdLength];
             int read2 = is.read(cmdBuffer);
-            String notice = new String(cmdBuffer);
+            String notice = new String(cmdBuffer, StandardCharsets.UTF_8);
             Log.d(TAG, "发送eventbus=>" + notice + ",读的长度:" + read2);
             EventBus.getDefault().post("back:" + notice);
         } catch (Exception e) {
@@ -350,13 +350,15 @@ public class SocketSender {
         //发送类型
         dos.write(MyCommand.PIC_START.getBytes(StandardCharsets.UTF_8));
         //发送文件夹名长度
-        dos.write(longToByteArray(folderName.length()));
+        byte[] folderNameBytes = folderName.getBytes(StandardCharsets.UTF_8);
+        dos.write(longToByteArray(folderNameBytes.length));
         //发送文件夹名
-        dos.write(folderName.getBytes(StandardCharsets.UTF_8));
+        dos.write(folderNameBytes);
         //发送文件名长度
-        dos.write(longToByteArray(picName.length()));
+        byte[] picNameBytes = picName.getBytes(StandardCharsets.UTF_8);
+        dos.write(longToByteArray(picNameBytes.length));
         //发送文件名
-        dos.write(picName.getBytes(StandardCharsets.UTF_8));
+        dos.write(picNameBytes);
         //发送文件长度
         Log.d(TAG, "图片文件长度" + imgLength);
         dos.write(longToByteArray(imgLength));
@@ -392,19 +394,22 @@ public class SocketSender {
         //发送类型
         dos.write(MyCommand.MD5_START.getBytes(StandardCharsets.UTF_8));
         //发送文件夹名长度
-        dos.write(longToByteArray(folderName.length()));
+        byte[] folderNameBytes = folderName.getBytes(StandardCharsets.UTF_8);
+        dos.write(longToByteArray(folderNameBytes.length));
         //发送文件夹名
-        dos.write(folderName.getBytes(StandardCharsets.UTF_8));
+        dos.write(folderNameBytes);
         //发送文件名长度
-        dos.write(longToByteArray(picName.length()));
+        byte[] picNameBytes = picName.getBytes(StandardCharsets.UTF_8);
+        dos.write(longToByteArray(picNameBytes.length));
         //发送文件名
-        dos.write(picName.getBytes(StandardCharsets.UTF_8));
+        dos.write(picNameBytes);
         //发送md5长度
-        int md5Length = picMd5.length();
-        Log.d(TAG, "图片md5长度" + md5Length);
-        dos.write(longToByteArray(md5Length));
+        byte[] picMd5Bytes = picMd5.getBytes(StandardCharsets.UTF_8);
+        //int md5Length = picMd5.length();
+        //Log.d(TAG, "图片md5长度" + md5Length);
+        dos.write(longToByteArray(picMd5Bytes.length));
         //发送md5值
-        dos.write(picMd5.getBytes(StandardCharsets.UTF_8));
+        dos.write(picMd5Bytes);
         dos.flush();
         return true;
 
@@ -435,7 +440,7 @@ public class SocketSender {
 
         if (!isConnect()) {
             Log.e(TAG, "未连接!!!");
-            return false;
+                return false;
         }
 
         try {
@@ -446,11 +451,19 @@ public class SocketSender {
             //String str = "STR:" + commandConvert;
             //命令开始
 
+//            outputStream.write(MyCommand.CMD_START.getBytes(StandardCharsets.UTF_8));
+//            //指令长度
+//            outputStream.write(longToByteArray(msg.length()));
+//            //指令内容
+//            outputStream.write(msg.getBytes(StandardCharsets.UTF_8));
+//            outputStream.flush();
+
             outputStream.write(MyCommand.CMD_START.getBytes(StandardCharsets.UTF_8));
+            byte[] sendDataBytes = msg.getBytes(StandardCharsets.UTF_8);
             //指令长度
-            outputStream.write(longToByteArray(msg.length()));
+            outputStream.write(longToByteArray(sendDataBytes.length));
             //指令内容
-            outputStream.write(msg.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(sendDataBytes);
             outputStream.flush();
             return true;
         } catch (Exception e) {
@@ -559,9 +572,10 @@ public class SocketSender {
             //命令开始
             outputStream.write(MyCommand.CMD_START.getBytes(StandardCharsets.UTF_8));
             //指令长度
-            outputStream.write(longToByteArray(msg.length()));
+            byte[] msgBytes = msg.getBytes(StandardCharsets.UTF_8);
+            outputStream.write(longToByteArray(msgBytes.length));
             //指令内容
-            outputStream.write(msg.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(msgBytes);
             outputStream.flush();
 
         } catch (Exception e) {

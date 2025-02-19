@@ -16,6 +16,7 @@ import com.pi.connectraspberry.service.EventMsg;
 import com.pi.connectraspberry.util.FileUtils;
 import com.pi.connectraspberry.util.MyCommand;
 import com.pi.connectraspberry.util.SocketSender;
+import com.pi.connectraspberry.util.ThreadUtil;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -71,60 +72,61 @@ public class ClassifyActivity extends BaseActivity {
     private void addClassify() {
 
         new XPopup.Builder(context).asInputConfirm(getResources().getString(R.string.add_new_classify), getResources().getString(R.string.please_enter_name),
-                        new OnInputConfirmListener() {
-                            @Override
-                            public void onConfirm(String text) {
-                                Log.d(TAG, "新增分类: " + text);
-                                //toast("input text: " + text);
-                                String specialChars = "\\s./, 。‘'*（）&%￥\\^?？#@！~：“；}\\{】【、|\\?\"<>";
-                                Pattern pattern = Pattern.compile("^[^" + specialChars + "]+$");
-                                Matcher matcher = pattern.matcher(text);
-                                boolean matches = matcher.matches();
+                new OnInputConfirmListener() {
+                    @Override
+                    public void onConfirm(String text) {
+                        Log.d(TAG, "新增分类: " + text);
+                        //toast("input text: " + text);
+                        String specialChars = "\\s./, 。‘'*（）&%￥\\^?？#@！~：“；}\\{】【、|\\?\"<>";
+                        Pattern pattern = Pattern.compile("^[^" + specialChars + "]+$");
+                        Matcher matcher = pattern.matcher(text);
+                        boolean matches = matcher.matches();
 
-                                if (!matches) {
-                                    showToast(getResources().getString(R.string.illegal_character));
-                                    return;
-                                }
+                        if (!matches) {
+                            showToast(getResources().getString(R.string.illegal_character));
+                            return;
+                        }
 
 
-                                if (!SocketSender.isConnect()) {
-                                    showToast(getResources().getString(R.string.connect_lost));
-                                    return;
-                                }
+                        if (!SocketSender.isConnect()) {
+                            showToast(getResources().getString(R.string.connect_lost));
+                            return;
+                        }
 
-                                boolean success = FileUtils.createFile(text);
+                        boolean success = FileUtils.createFile(text);
 
-                                Log.d(TAG, "文件夹是否创建成功:" + success);
-                                if (!success) {
+                        Log.d(TAG, "文件夹是否创建成功:" + success);
+                        if (!success) {
+                            showToast(getResources().getString(R.string.add_classify_fail));
+                            return;
+                        }
+
+                        //通知raspberry创建文件夹
+
+                        ThreadUtil.getParallelExecutor().execute(() -> {
+                            try {
+
+                                boolean b = SocketSender.sendCreateFolder(text);
+                                Log.d(TAG, "sendCreateFolder: " + b);
+                                if (b) {
+
+                                    runOnUiThread(() -> {
+                                        showToast(getResources().getString(R.string.add_classify_success));
+                                        folderList.add(text);
+                                        mAdapter.notifyDataSetChanged();
+                                    });
+
+                                } else {
                                     showToast(getResources().getString(R.string.add_classify_fail));
-                                    return;
                                 }
 
-                                //通知raspberry创建文件夹
-                                new Thread(() -> {
-                                    try {
-
-                                        boolean b = SocketSender.sendCreateFolder(text);
-                                        Log.d(TAG, "sendCreateFolder: " + b);
-                                        if (b) {
-
-                                            runOnUiThread(() -> {
-                                                showToast(getResources().getString(R.string.add_classify_success));
-                                                folderList.add(text);
-                                                mAdapter.notifyDataSetChanged();
-                                            });
-
-                                        } else {
-                                            showToast(getResources().getString(R.string.add_classify_fail));
-                                        }
-
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                }).start();
-
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
-                        })
+                        });
+
+                    }
+                })
                 .show();
 
     }
@@ -201,24 +203,24 @@ public class ClassifyActivity extends BaseActivity {
     private void showShowDialog(String name) {
         //弹出提示，是否删除当前文件夹
         new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.are_sure_show) + name + getResources().getString(R.string.are_sure_show_after),
-                        new OnConfirmListener() {
-                            @Override
-                            public void onConfirm() {
-                                //toast("click confirm");
-                                Log.d(TAG, "发送显示当前文件夹内的所有图片");
+                new OnConfirmListener() {
+                    @Override
+                    public void onConfirm() {
+                        //toast("click confirm");
+                        Log.d(TAG, "发送显示当前文件夹内的所有图片");
 
-                                showProgressDialog(getResources().getString(R.string.converting));
-                                new Thread(() -> {
-                                    boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CONVERT + name);
-                                    if (!b) {
-                                        hideProgressDialog();
-                                        showToast(getResources().getString(R.string.connect_lost));
-
-                                    }
-                                }).start();
+                        showProgressDialog(getResources().getString(R.string.converting));
+                        new Thread(() -> {
+                            boolean b = SocketSender.sendCommand(MyCommand.COMMAND_CONVERT + name);
+                            if (!b) {
+                                hideProgressDialog();
+                                showToast(getResources().getString(R.string.connect_lost));
 
                             }
-                        })
+                        }).start();
+
+                    }
+                })
                 .show();
 
     }
@@ -226,51 +228,51 @@ public class ClassifyActivity extends BaseActivity {
     private void showDeleteDialog(String name) {
         //弹出提示，是否删除当前文件夹
         new XPopup.Builder(this).asConfirm(getResources().getString(R.string.attention), getResources().getString(R.string.are_sure_delete) + name + getResources().getString(R.string.are_sure_delete_after),
-                        new OnConfirmListener() {
-                            @Override
-                            public void onConfirm() {
-                                //toast("click confirm");
+                new OnConfirmListener() {
+                    @Override
+                    public void onConfirm() {
+                        //toast("click confirm");
 
 
-                                if (!SocketSender.isConnect()) {
-                                    showToast(getResources().getString(R.string.connect_lost));
-                                    return;
+                        if (!SocketSender.isConnect()) {
+                            showToast(getResources().getString(R.string.connect_lost));
+                            return;
+                        }
+
+                        int i = FileUtils.deleteDirectory(new File(FileUtils.getLocalBasePath() + name));
+                        if (i == 0) {
+
+                            //通知raspberry删除文件夹
+                            new Thread(() -> {
+                                try {
+
+                                    boolean b = SocketSender.sendDeleteFolder(name);
+                                    Log.d(TAG, "sendCreateFolder: " + b);
+                                    if (b) {
+
+                                        runOnUiThread(() -> {
+                                            showToast(getResources().getString(R.string.delete_success));
+                                            folderList.remove(name);
+                                            mAdapter.notifyDataSetChanged();
+                                        });
+                                    } else {
+                                        showToast(getResources().getString(R.string.delete_failed));
+                                    }
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
-
-                                int i = FileUtils.deleteDirectory(new File(FileUtils.getLocalBasePath() + name));
-                                if (i == 0) {
-
-                                    //通知raspberry删除文件夹
-                                    new Thread(() -> {
-                                        try {
-
-                                            boolean b = SocketSender.sendDeleteFolder(name);
-                                            Log.d(TAG, "sendCreateFolder: " + b);
-                                            if (b) {
-
-                                                runOnUiThread(() -> {
-                                                    showToast(getResources().getString(R.string.delete_success));
-                                                    folderList.remove(name);
-                                                    mAdapter.notifyDataSetChanged();
-                                                });
-                                            } else {
-                                                showToast(getResources().getString(R.string.delete_failed));
-                                            }
-
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }).start();
+                            }).start();
 
 
-                                } else if (i == -1) {
-                                    showToast(getResources().getString(R.string.folder_not_exist));
-                                } else if (i == -2) {
-                                    showToast(getResources().getString(R.string.delete_failed));
-                                }
-                                Log.d(TAG, "删除当前文件夹和文件夹内的所有图片");
-                            }
-                        })
+                        } else if (i == -1) {
+                            showToast(getResources().getString(R.string.folder_not_exist));
+                        } else if (i == -2) {
+                            showToast(getResources().getString(R.string.delete_failed));
+                        }
+                        Log.d(TAG, "删除当前文件夹和文件夹内的所有图片");
+                    }
+                })
                 .show();
 
     }

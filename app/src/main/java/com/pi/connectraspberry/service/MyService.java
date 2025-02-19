@@ -59,31 +59,6 @@ public class MyService extends Service {
 
         }
 
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//
-//                while (true) {
-//
-//                    try {
-//
-////                        ExecutorService parallelExecutor = ThreadUtil.getParallelExecutor();
-////
-////                        boolean terminated = parallelExecutor.isTerminated();
-////                        boolean shutdown = parallelExecutor.isShutdown();
-//
-////                        Log.d(TAG, "线程池状态:" + terminated + ",shutdown:" + shutdown);
-//                        //Log.d(TAG, "检测 检测 xxxxxx :");
-//
-//                        SystemClock.sleep(1000 * 2);
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                }
-//            }
-//        }).start();
-
     }
 
     @Override
@@ -147,7 +122,7 @@ public class MyService extends Service {
         super.onDestroy();
 
         try {
-            Log.d(TAG, "===========onDestroy===========");
+            Log.e(TAG, "===========MyService   onDestroy socket连接 服务被销毁 ===========");
             if (parallelExecutor != null)
                 parallelExecutor.shutdown();
         } catch (Exception e) {
