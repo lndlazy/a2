@@ -197,12 +197,14 @@ public class SocketSender {
             int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
             Log.d(TAG, "md5内容长度:" + cmdLength);
             //
-            byte[] cmdBuffer = new byte[cmdLength];
-            int read2 = is.read(cmdBuffer);
-            //获取指令内容 文件夹内图片的md5值
-            String md5Json = new String(cmdBuffer, StandardCharsets.UTF_8);
+
+            String md5Json = readInputStreamToString(is, cmdLength);
+//            byte[] cmdBuffer = new byte[cmdLength];
+//            int read2 = is.read(cmdBuffer);
+//            //获取指令内容 文件夹内图片的md5值
+//            String md5Json = new String(cmdBuffer, StandardCharsets.UTF_8);
+//            // ["fce429a4c0ad0aeca5cfd07f2f023299"]
             Log.d(TAG, "文件夹内图片内容: " + md5Json);
-            // ["fce429a4c0ad0aeca5cfd07f2f023299"]
             Map<String, Object> map2 = JSON.parseObject(md5Json, new TypeReference<Map<String, Object>>() {
             });
 
@@ -214,6 +216,35 @@ public class SocketSender {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 从 InputStream 中读取指定长度的字节并转换为字符串，每次读取 1024 字节
+     *
+     * @param is     输入流
+     * @param length 要读取的字节长度
+     * @return 转换后的字符串
+     * @throws IOException 如果读取输入流时发生 I/O 错误
+     */
+    public static String readInputStreamToString(InputStream is, int length) throws IOException {
+        StringBuilder result = new StringBuilder();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        int totalRead = 0;
+
+        while (totalRead < length) {
+            int toRead = Math.min(1024, length - totalRead);
+            bytesRead = is.read(buffer, 0, toRead);
+            if (bytesRead == -1) {
+                break;
+            }
+            String part = new String(buffer, 0, bytesRead, StandardCharsets.UTF_8);
+            result.append(part);
+            totalRead += bytesRead;
+        }
+
+        return result.toString();
+    }
+
 
     private static void cmdCommand() {
         try {
@@ -440,7 +471,7 @@ public class SocketSender {
 
         if (!isConnect()) {
             Log.e(TAG, "未连接!!!");
-                return false;
+            return false;
         }
 
         try {
