@@ -332,13 +332,35 @@ public class FileUtils {
         return Environment.MEDIA_MOUNTED.equals(state);
     }
 
-
     public static void clearInternalCache(Context context) {
+        File cacheDir = context.getCacheDir();
+        if (cacheDir != null && cacheDir.isDirectory()) {
+            deleteFileOneStep(cacheDir);
+        }
+    }
+
+    private static void deleteFileOneStep(File cacheDir) {
+        if (cacheDir != null && cacheDir.isDirectory()) {
+            String[] children = cacheDir.list();
+            for (String child : children) {
+                File file = new File(cacheDir, child);
+                if (file.isFile()) {
+                    file.delete();
+                }
+            }
+
+        }
+
+    }
+
+    public static void clearAllCache(Context context) {
         File cacheDir = context.getCacheDir();
         if (cacheDir != null && cacheDir.isDirectory()) {
             deleteMyDirectory(cacheDir);
         }
     }
+
+
     private static boolean deleteMyDirectory(File directory) {
         if (directory != null && directory.isDirectory()) {
             String[] children = directory.list();

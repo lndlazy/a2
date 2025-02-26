@@ -2,6 +2,8 @@ package com.pi.connectraspberry.ui;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
@@ -9,6 +11,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 
@@ -18,11 +22,18 @@ import com.pi.connectraspberry.bean.FolderBean;
 import com.pi.connectraspberry.callback.MyItemTouchHelperCallback;
 import com.pi.connectraspberry.mlogger.MLogger;
 import com.pi.connectraspberry.service.EventMsg;
+import com.pi.connectraspberry.util.BMPUtils;
+import com.pi.connectraspberry.util.CommUtils;
 import com.pi.connectraspberry.util.FileUtils;
 import com.pi.connectraspberry.util.ImageUtil;
 import com.pi.connectraspberry.util.MD5Util;
 import com.pi.connectraspberry.util.MyCommand;
 import com.pi.connectraspberry.util.SocketSender;
+import com.yalantis.ucrop.UCrop;
+import com.yalantis.ucrop.callback.BitmapLoadCallback;
+import com.yalantis.ucrop.model.AspectRatio;
+import com.yalantis.ucrop.model.ExifInfo;
+import com.yalantis.ucrop.util.BitmapLoadUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -34,6 +45,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import me.jingbin.library.ByRecyclerView;
 import me.jingbin.library.adapter.BaseByViewHolder;
@@ -118,7 +130,6 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
         String fileName = file.getName();
         return fileName.toLowerCase().endsWith(".bmp");
     }
-
 
     private static BaseByViewHolder<String> currentHolder;
     private DetailImageAdapter mAdapter;
@@ -228,78 +239,250 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
         }
     }
 
+    private Uri originalUri = null;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(TAG, "结果::" + requestCode + "," + resultCode);
+
+
         if (requestCode == PICK_IMAGES && resultCode == RESULT_OK) {
             if (data.getClipData() != null) {
                 Log.d(TAG, "多张图片,数量:" + data.getClipData().getItemCount());
                 int count = data.getClipData().getItemCount();
 
-                showLoadingDialog(getResources().getString(R.string.loading));
 
-                try {
-                    copyPicture(data, count);
-                } catch (Exception e) {
-                    MLogger.e("复制图片失败:" + e.getMessage());
-                    e.printStackTrace();
+                int beginIndex = 0;
+                if (alreadyList.size() > 0)
+                    beginIndex = alreadyList.size();
+
+                for (int i = 0; i < count; i++) {
+
+                    if (alreadyList.size() >= 9) {
+                        showToast(getResources().getString(R.string.most_nine));
+                        break;
+                    }
+
+                    originalUri = data.getClipData().getItemAt(i).getUri();
+
+                    String pathFromUri = ImageUtil.getPathFromUri(this, originalUri);
+                    int currentIndex = beginIndex + i;
+                    Log.d(TAG, "图片路径 ：：" + pathFromUri + ",===> beginIndex:" + currentIndex);
+
+//                    alreadyList.add("");
+                    //判断是否是BMP图片
+                    if (FileUtils.isBMPPic(pathFromUri)) {
+
+                        if (FileUtils.isSizeNormal(pathFromUri)) {
+                            //既是BMP图片，且像素符合要求 * @param sourceFile原图片文件  * @param targetDirectory 目标目录    * @param targetFileName 目标文件名称
+                            String targetDirectory = FileUtils.getLocalBasePath();
+                            String targetFileName = UUID.randomUUID() + "_" + i + ".bmp";
+                            FileUtils.copyPic2CurrentFile(new File(pathFromUri), targetDirectory, targetFileName);
+                            File file = new File(targetDirectory, targetFileName);
+                            addPic(currentIndex, file.getPath());
+                        } else {
+                            //BMP图片不符合像素要求，裁剪图片
+                            resetPic(currentIndex);
+                        }
+
+                    } else {
+                        //不是BMP图片，判断尺寸是否满足
+                        resetPic(currentIndex);
+                    }
+
                 }
-                hideLoadingDialog();
             }
-        }
+        } else if (requestCode == UCrop.REQUEST_CROP && resultCode == RESULT_OK) {
+            //处理裁剪结果
+            Uri resultUri = UCrop.getOutput(data);
 
-        if (mAdapter != null)
-            mAdapter.notifyDataSetChanged();
+            handleCropResult(resultUri, originalUri);
+
+        }  else {
+            Log.d(TAG, "other ===》》code: " + requestCode + "," + resultCode);
+        }
 
     }
 
-    private void copyPicture(Intent data, int count) {
+
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        Log.d(TAG, "结果::" + requestCode + "," + resultCode);
+//        if (requestCode == PICK_IMAGES && resultCode == RESULT_OK) {
+//            if (data.getClipData() != null) {
+//                Log.d(TAG, "多张图片,数量:" + data.getClipData().getItemCount());
+//                int count = data.getClipData().getItemCount();
+//
+//                showLoadingDialog(getResources().getString(R.string.loading));
+//
+//                try {
+//                    copyPicture(data, count);
+//                } catch (Exception e) {
+//                    MLogger.e("复制图片失败:" + e.getMessage());
+//                    e.printStackTrace();
+//                }
+//                hideLoadingDialog();
+//            }
+//        }
+//
+//        if (mAdapter != null)
+//            mAdapter.notifyDataSetChanged();
+//
+//    }
 
 
-        boolean hasIllegalPic = false;
-        for (int i = 0; i < count; i++) {
 
-            if (alreadyList.size() >= 9) {
-                showToast(getResources().getString(R.string.most_nine));
-                break;
+    private void addPic(int index, String imgPath) {
+        alreadyList.add(imgPath);
+//        alreadyList.set(index, imgPath);
+//        //清除为空的图片数据
+//        clearEmptyPicData();
+//        for (String s : alreadyList) {
+//            Log.d(TAG, "排列前::" + s);
+//        }
+        CommUtils.sortListByNumber(alreadyList);
+//        for (String s : alreadyList) {
+//            Log.d(TAG, "排列后::" + s);
+//        }
+
+        if (mAdapter != null)
+            mAdapter.notifyDataSetChanged();
+    }
+
+
+    private void clearEmptyPicData() {
+        Iterator<String> iterator = alreadyList.iterator();
+        while (iterator.hasNext()) {
+            String item = iterator.next();
+            if (item.isEmpty()) {
+                iterator.remove();
             }
+        }
+    }
 
-            //alreadyList.clear();
-            Uri imageUri = data.getClipData().getItemAt(i).getUri();
+    private void resetPic(int i) {
+        UCrop.Options options = new UCrop.Options();
+// 可以设置裁剪界面的各种属性，如裁剪框的颜色、背景色等
+//                    options.setToolbarColor(ContextCompat.getColor(this, android.R.color.background_light));
+//                    options.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
+        // 设置裁剪的宽高比为 12:17
+        options.setAspectRatioOptions(0, new AspectRatio("12:17", 12, 17));
+        // 设置输出的分辨率为 2160*3060
+        options.withMaxResultSize(2160, 3060);
+//                    options.setCompressionMaxWidth(2160);
+//                    options.setCompressionMaxHeight(3060);
+        UCrop.of(originalUri, Uri.fromFile(new File(getCacheDir(), UUID.randomUUID() + "_" + i + ".jpg")))
+                .withOptions(options)
+                .start(this);
+    }
+
+
+    // 缩放图片
+    private void handleCropResult(Uri resultUri, Uri originalUri) {
+
+        Log.d(TAG, "resultUri:" + resultUri.getPath());
+
+        Log.d(TAG, "resultUri:" + resultUri.getPath());
+
+//        Log.d(TAG, "originalUri:" + originalUri + ",resultUri==>" + resultUri);
+        if (resultUri != null) {
+            try {
+                // 获取裁剪后的图片
+
+                BitmapLoadUtils.decodeBitmapInBackground(this, resultUri, resultUri, 2160, 3060, new BitmapLoadCallback() {
+                    @Override
+                    public void onBitmapLoaded(@NonNull Bitmap bitmap, @NonNull ExifInfo exifInfo, @NonNull String imageInputPath, @Nullable String imageOutputPath) {
+
+                        Log.d(TAG, "图片裁剪成功===》" + imageInputPath + ", 输出地址:" + imageOutputPath);
+
+                        Bitmap originalBitmap = BitmapFactory.decodeFile(imageOutputPath);
+                        // 设定新的像素宽度和高度
+                        int newWidth = 2160;
+                        int newHeight = 3060;
+                        // 缩放图片
+                        Bitmap scaledBitmap = ImageUtil.scaleBitmap(originalBitmap, newWidth, newHeight);
+                        //保存图片
+//                        String afterPath = UUID.randomUUID().toString() + ".png";
+//                        ImageUtil.saveBitmapToFile(scaledBitmap, new File(getCacheDir(), afterPath));
+
+//                        String newPath =  UUID.randomUUID() + ".bmp";
+                        String lastIndex = "";
+
+                        File f = new File(resultUri.getPath());
+                        Log.d(TAG, "文件名称:::" + f.getName());
+                        lastIndex = CommUtils.extractStr(f.getName());
+                        File file = new File(getCacheDir(), UUID.randomUUID() + "_" + lastIndex + ".bmp");
+
+                        BMPUtils.convertToBMP(scaledBitmap, file.getPath());
+
+                        //判断制作好的BMP图片是否符合像素要求
+                        boolean standardPic = FileUtils.isStandardPic(file.getPath());
+                        if (standardPic) {
+
+                            //获取imageInputPath文件名的最后一位
+                            int position = 0;
+                            int index = imageInputPath.lastIndexOf(".");
+                            String fileName = imageInputPath.substring(index - 1, index);
+                            position = Integer.parseInt(fileName);
+
+                            addPic(position, file.getPath());
+                            Log.d(TAG, "  ===转成bmp格式成功===  " + file.getPath());
+
+                        } else {
+                            showToast("图片转换失败！");
+                            Log.e(TAG, "  ===转成bmp格式失败!!!!!!!!!!!! ===  " + file.getPath());
+                        }
+
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Exception bitmapWorkerException) {
+
+                        Log.d(TAG, "裁剪失败:" + bitmapWorkerException.getMessage());
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void copyPicture() {
+
+        if (alreadyList == null)
+            return;
+
+        for (int i = 0; i < alreadyList.size(); i++) {
+
             //原文件路径
-            String imgPath = ImageUtil.getPathFromUri(this, imageUri);
-
-            boolean standardPic = FileUtils.isStandardPic(imgPath);
-            if (!standardPic) {
-                //非bmp格式图片不处理
-                hasIllegalPic = true;
-                continue;
-            }
+            String imgPath = alreadyList.get(i);
 
             File imgFile = new File(imgPath);
             //目标文件目录
             String targetPath = FileUtils.getLocalBasePath() + classifyName;
 
-            //判断目录下是否已经有同名文件
-            String fileName = imgFile.getName();
-            Log.d(TAG, "图片名称:" + fileName);
+//            //判断目录下是否已经有同名文件
+//            String fileName = imgFile.getName();
+//            Log.d(TAG, "图片名称:" + fileName);
+//
+//            boolean repeat = FileUtils.isRepeat(new File(targetPath), fileName);
+//
+//            String targetFileName = repeat ? FileUtils.add_1(fileName) : fileName;
+//
+//            //如果文件夹里还是有同名的文件，就在文件名后面再加_1
+//            while (FileUtils.isRepeat(new File(targetPath), targetFileName)) {
+//                targetFileName = FileUtils.add_1(targetFileName);
+//            }
 
-            boolean repeat = FileUtils.isRepeat(new File(targetPath), fileName);
-
-            String targetFileName = repeat ? FileUtils.add_1(fileName) : fileName;
-
-            //如果文件夹里还是有同名的文件，就在文件名后面再加_1
-            while (FileUtils.isRepeat(new File(targetPath), targetFileName)) {
-                targetFileName = FileUtils.add_1(targetFileName);
-            }
-
+            String targetFileName = imgFile.getName();
             boolean b = FileUtils.copyPic2CurrentFile(imgFile, targetPath, targetFileName);
 
             if (b) {
-                //图片拷贝成功
-                File newFile = new File(targetPath, targetFileName);
-                alreadyList.add(newFile.getAbsolutePath());
+//                //图片拷贝成功
+//                File newFile = new File(targetPath, targetFileName);
+//                alreadyList.add(newFile.getAbsolutePath());
 
                 Log.d(TAG, "复制成功==目标文件名称:" + targetFileName);
                 sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(targetPath))));
@@ -310,9 +493,9 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
         }
 
-        if (hasIllegalPic) {
-            showToast(getResources().getString(R.string.filter_illegal_pic));
-        }
+//        if (hasIllegalPic) {
+//            showToast(getResources().getString(R.string.filter_illegal_pic));
+//        }
 
     }
 
@@ -389,7 +572,6 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
 
                 });
 
-
 //                holder.addOnClickListener(R.id.ivDelete);
 //                holder.addOnClickListener(R.id.img);
                 Glide.with(context)
@@ -409,7 +591,6 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
     }
-
 
     private List<String> raspMd5List = new ArrayList<>();
 
@@ -455,16 +636,13 @@ public class ClassifyDetailActivity extends BaseActivity implements View.OnClick
                 .dontAnimate() //加载没有任何动画
                 .into(ivPreview);
 
-
     }
-
 
     private void hiddenPicPreView() {
         ivPreview.setVisibility(View.GONE);
         //把显示的图片清空掉
         ivPreview.setImageDrawable(null);
     }
-
 
     @Override
     protected void onDestroy() {

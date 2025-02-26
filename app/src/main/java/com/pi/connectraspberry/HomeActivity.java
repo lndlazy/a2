@@ -52,6 +52,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -455,7 +456,6 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
     private static final int PICK_IMAGES = 22;
     private static final int CROP_REQUEST_CODE = 23;
-//    private Map<String, String> appMd5Map = new LinkedHashMap<>();
 
     //    private boolean hasIllegalPic = false;
     private Uri originalUri = null;
@@ -489,13 +489,17 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                     int currentIndex = beginIndex + i;
                     Log.d(TAG, "图片路径 ：：" + pathFromUri + ",===> beginIndex:" + currentIndex);
 
-                    alreadyList.add("");
+//                    alreadyList.add("");
                     //判断是否是BMP图片
                     if (FileUtils.isBMPPic(pathFromUri)) {
 
                         if (FileUtils.isSizeNormal(pathFromUri)) {
-                            //既是BMP图片，且像素符合要求
-                            addPic(currentIndex, pathFromUri);
+                            //既是BMP图片，且像素符合要求 * @param sourceFile原图片文件  * @param targetDirectory 目标目录    * @param targetFileName 目标文件名称
+                            String targetDirectory = FileUtils.getLocalBasePath();
+                            String targetFileName = UUID.randomUUID() + "_" + i + ".bmp";
+                            FileUtils.copyPic2CurrentFile(new File(pathFromUri), targetDirectory, targetFileName);
+                            File file = new File(targetDirectory, targetFileName);
+                            addPic(currentIndex, file.getPath());
                         } else {
                             //BMP图片不符合像素要求，裁剪图片
                             resetPic(currentIndex);
@@ -504,16 +508,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                     } else {
                         //不是BMP图片，判断尺寸是否满足
                         resetPic(currentIndex);
-//                        if (FileUtils.isSizeNormal(pathFromUri)) {
-//                            //尺寸满足，进行转换
-//                            handleCropResult(ImageUtil.getUri(new File(pathFromUri)), null);
-//                        } else {
-//                            //尺寸不满足，裁剪
-//                            resetPic();
-//                        }
-
                     }
-
 
                 }
             }
@@ -523,30 +518,39 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
             handleCropResult(resultUri, originalUri);
 
-        } else {
-            Log.d(TAG, "other ===》》 ");
+        }  else {
+            Log.d(TAG, "other ===》》code: " + requestCode + "," + resultCode);
         }
-
-//        if (hasIllegalPic) {
-//            showToast(getResources().getString(R.string.filter_illegal_pic));
-//        }
-
-//        for (String s : alreadyList) {
-//            Log.d(TAG, "地址::" + s);
-//        }
 
     }
 
 
-    private void addPic(int index, String pathFromUri) {
+    private void addPic(int index, String imgPath) {
+        alreadyList.add(imgPath);
+//        alreadyList.set(index, imgPath);
+//        //清除为空的图片数据
+//        clearEmptyPicData();
+//        for (String s : alreadyList) {
+//            Log.d(TAG, "排列前::" + s);
+//        }
+        CommUtils.sortListByNumber(alreadyList);
+//        for (String s : alreadyList) {
+//            Log.d(TAG, "排列后::" + s);
+//        }
 
-        alreadyList.set(index, pathFromUri);
-//        if (head)
-//            alreadyList.add(0, pathFromUri);
-//        else
-//            alreadyList.add(pathFromUri);
         if (mAdapter != null)
             mAdapter.notifyDataSetChanged();
+    }
+
+
+    private void clearEmptyPicData() {
+        Iterator<String> iterator = alreadyList.iterator();
+        while (iterator.hasNext()) {
+            String item = iterator.next();
+            if (item.isEmpty()) {
+                iterator.remove();
+            }
+        }
     }
 
     private void resetPic(int i) {
@@ -594,7 +598,13 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 //                        ImageUtil.saveBitmapToFile(scaledBitmap, new File(getCacheDir(), afterPath));
 
 //                        String newPath =  UUID.randomUUID() + ".bmp";
-                        File file = new File(getCacheDir(), UUID.randomUUID() + ".bmp");
+                        String lastIndex = "";
+
+                        File f = new File(resultUri.getPath());
+                        Log.d(TAG, "文件名称:::" + f.getName());
+                        lastIndex = CommUtils.extractStr(f.getName());
+                        File file = new File(getCacheDir(), UUID.randomUUID() + "_" + lastIndex + ".bmp");
+
                         BMPUtils.convertToBMP(scaledBitmap, file.getPath());
 
                         //判断制作好的BMP图片是否符合像素要求
