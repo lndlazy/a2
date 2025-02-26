@@ -49,9 +49,7 @@ public class MyItemTouchHelperCallback extends ItemTouchHelper.Callback {
         int toPosition = target.getPosition();
         if (fromPosition < toPosition) {
             for (int i = fromPosition; i < toPosition; i++) {
-
                 //List<Uri> data = adapter.getData();
-
                 Collections.swap(adapter.getData(), i, i + 1);
             }
         } else {
@@ -96,7 +94,8 @@ public class MyItemTouchHelperCallback extends ItemTouchHelper.Callback {
                 }
 
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
+                Log.d(TAG, "拖拽异常了");
             }
 
 //            if (adapter instanceof ImageAdapter && viewHolder instanceof ImageAdapter.ImageViewHolder) {

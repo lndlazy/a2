@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +39,7 @@ public class SocketSender {
     private static final String SERVER_IP = "10.0.0.1"; // 替换为树莓派的IP
     private static final int SERVER_PORT = 12345;
     private static final String TAG = "SocketSender";
+    private static final int CONNECT_TIME_OUT = 1000 * 5;
     private static Socket socket;
     private static Timer timer;
     private static BufferedReader in;
@@ -318,6 +320,10 @@ public class SocketSender {
 
             if (socket == null)
                 socket = new Socket(SERVER_IP, SERVER_PORT);
+//                socket = new Socket();
+
+//            socket.connect(new InetSocketAddress(SERVER_IP, SERVER_PORT), CONNECT_TIME_OUT);
+
             // 接收心跳包
             if (timer == null)
                 timer = new Timer();
