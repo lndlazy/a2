@@ -36,7 +36,7 @@ import java.util.concurrent.ExecutorService;
 
 public class SocketSender {
 
-    private static final String SERVER_IP = "10.0.0.1"; // 替换为树莓派的IP
+    private static final String SERVER_IP = "192.168.12.1"; // 替换为树莓派的IP
     private static final int SERVER_PORT = 12345;
     private static final String TAG = "SocketSender";
     private static final int CONNECT_TIME_OUT = 1000 * 5;
