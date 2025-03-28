@@ -167,14 +167,18 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         if (message.startsWith("back:")) {
             String msg = message.substring(5);
 
+            Log.d(TAG, "消息++>" + message + ",裁剪后:" + msg);
+
             if (EventMsg.LOG_SUCCESS.equals(msg))
                 showToast(getResources().getString(R.string.log_extraction_success));
             else
                 showToast(msg);
 
             //Log.d(TAG, "接受到返回的消息: " + message);
-            if (message.contains("convert "))
+            if (message.contains("convert ")) {
                 hideProgressDialog();
+                Log.d(TAG, "隐藏进度条");
+            }
 
             return;
         }
@@ -518,7 +522,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
             handleCropResult(resultUri, originalUri);
 
-        }  else {
+        } else {
             Log.d(TAG, "other ===》》code: " + requestCode + "," + resultCode);
         }
 
@@ -616,7 +620,6 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                             int index = imageInputPath.lastIndexOf(".");
                             String fileName = imageInputPath.substring(index - 1, index);
                             position = Integer.parseInt(fileName);
-
                             addPic(position, file.getPath());
                             Log.d(TAG, "  ===转成bmp格式成功===  " + file.getPath());
 

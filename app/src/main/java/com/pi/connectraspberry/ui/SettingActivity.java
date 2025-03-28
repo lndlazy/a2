@@ -38,6 +38,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private TextView tvHue;
     private TextView tvSat;
     private TextView tvBright;
+    private TextView tvGama;
     private TextView tvContrast;
 
     private int seconds;//播放时长
@@ -45,6 +46,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private int sat;//饱和度调整范围为-100至100
     private int bright;//亮度调整范围为-100至100
     private int contrast;//对比度调整范围为-100至100
+    private float gama;//伽马值0-2
     private boolean auto;//是否是自动切换模式
     private TextView tvMode;//自动、手动模式
     private TextView tvLanguage;//语言
@@ -70,6 +72,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvTime = findViewById(R.id.tvTime);
         tvHue = findViewById(R.id.tvHue);
         tvSat = findViewById(R.id.tvSat);
+        tvGama = findViewById(R.id.tvGama);
         tvBright = findViewById(R.id.tvBright);
         tvContrast = findViewById(R.id.tvContrast);
         tvLanguage = findViewById(R.id.tvLanguage);
@@ -84,6 +87,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         ConstraintLayout clLanguage = findViewById(R.id.clLanguage);
         ConstraintLayout clClearData = findViewById(R.id.clClearData);
         ConstraintLayout clGetLog = findViewById(R.id.clGetLog);
+        ConstraintLayout clGama = findViewById(R.id.clGama);
 
         clTime.setOnClickListener(this);
         clHue.setOnClickListener(this);
@@ -95,6 +99,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         clLanguage.setOnClickListener(this);
         clClearData.setOnClickListener(this);
         clGetLog.setOnClickListener(this);
+        clGama.setOnClickListener(this);
 
     }
 
@@ -105,6 +110,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         hue = SpUtils.getConfig(SpUtils.HUE, 0);
         sat = SpUtils.getConfig(SpUtils.SAT, 0);
         bright = SpUtils.getConfig(SpUtils.BRIGHT, 0);
+        gama = SpUtils.getConfig(SpUtils.GAMA, 1);
         contrast = SpUtils.getConfig(SpUtils.CONTRAST, 0);
         auto = SpUtils.getBoolean(SpUtils.SWITCH, true);
 
@@ -113,6 +119,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvSat.setText(sat + "");
         tvBright.setText(bright + "");
         tvContrast.setText(contrast + "");
+        tvGama.setText(gama + "");
         tvMode.setText(auto ? getResources().getString(R.string.automatic_mode) : getResources().getString(R.string.manual_mode));
 
         String languagePreference = SpUtils.getLanguagePreference();
@@ -143,6 +150,11 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             case R.id.clBright:
                 //亮度调整范围为-100至100
                 setPicBright();
+                break;
+
+            case R.id.clGama:
+                //伽马值调整 范围0-2
+                setGama();
                 break;
 
             case R.id.clContrast:
@@ -371,7 +383,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         });
     }
 
-    private void syncConfig2Raspberry(String type, int value) {
+    private void syncConfig2Raspberry(String type, float value) {
         //通知raspberry pi更新配置
 //        ThreadUtil.getParallelExecutor().execute(configRunnable);
         new Thread(new Runnable() {
@@ -391,34 +403,38 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
 
     }
 
-    private ConfigBean getConfigBean(String type, int value) {
+    private ConfigBean getConfigBean(String type, float value) {
 
         ConfigBean configBean = new ConfigBean();
         configBean.setSeconds(SpUtils.getConfig(SpUtils.PLAY_INTERVAL, 60));
         configBean.setHue(SpUtils.getConfig(SpUtils.HUE, 0));
         configBean.setSat(SpUtils.getConfig(SpUtils.SAT, 0));
         configBean.setBright(SpUtils.getConfig(SpUtils.BRIGHT, 0));
+        configBean.setGama(SpUtils.getConfig(SpUtils.GAMA, 1.0f));
         configBean.setContrast(SpUtils.getConfig(SpUtils.CONTRAST, 0));
         configBean.setAuto(SpUtils.getBoolean(SpUtils.SWITCH, true));//0是自动， 1是手动
 
         switch (type) {
             case SpUtils.SAT:
-                configBean.setSat(value);
+                configBean.setSat((int) value);
                 break;
             case SpUtils.HUE:
-                configBean.setHue(value);
+                configBean.setHue((int) value);
                 break;
             case SpUtils.BRIGHT:
-                configBean.setBright(value);
+                configBean.setBright((int) value);
                 break;
             case SpUtils.CONTRAST:
-                configBean.setContrast(value);
+                configBean.setContrast((int) value);
                 break;
             case SpUtils.PLAY_INTERVAL:
-                configBean.setSeconds(value);
+                configBean.setSeconds((int) value);
                 break;
             case SpUtils.SWITCH:
                 configBean.setAuto(value == 0);
+                break;
+            case SpUtils.GAMA:
+                configBean.setGama(value);
                 break;
             case "reset":
                 configBean.setSeconds(60);
@@ -426,6 +442,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 configBean.setSat(0);
                 configBean.setBright(0);
                 configBean.setContrast(0);
+                configBean.setGama(1.0f);
                 configBean.setAuto(true);
                 break;
         }
@@ -434,40 +451,46 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     }
 
 
-    private void setNowValue(String type, int value) {
+    private void setNowValue(String type, float value) {
 
         showToast(getResources().getString(R.string.set_success));
 
         switch (type) {
 
             case SpUtils.SAT:
-                sat = value;
+                sat = (int) value;
                 SpUtils.putConfig(SpUtils.SAT, sat);
                 tvSat.setText(sat + "");
                 break;
 
             case SpUtils.HUE:
-                hue = value;
+                hue = (int) value;
                 SpUtils.putConfig(SpUtils.HUE, hue);
                 tvHue.setText(hue + "");
                 break;
 
             case SpUtils.BRIGHT:
-                bright = value;
+                bright = (int) value;
                 SpUtils.putConfig(SpUtils.BRIGHT, bright);
                 tvBright.setText(bright + "");
                 break;
 
             case SpUtils.CONTRAST:
-                contrast = value;
+                contrast = (int) value;
                 SpUtils.putConfig(SpUtils.CONTRAST, contrast);
                 tvContrast.setText(contrast + "");
                 break;
 
             case SpUtils.PLAY_INTERVAL:
-                seconds = value;
+                seconds = (int) value;
                 SpUtils.putConfig(SpUtils.PLAY_INTERVAL, seconds);
                 tvTime.setText(seconds + "s");
+                break;
+
+            case SpUtils.GAMA:
+                gama = value;
+                SpUtils.putConfig(SpUtils.GAMA, gama);
+                tvGama.setText(gama + "");
                 break;
 
             case SpUtils.SWITCH:
@@ -481,6 +504,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 SpUtils.putConfig(SpUtils.HUE, 0);
                 SpUtils.putConfig(SpUtils.SAT, 0);
                 SpUtils.putConfig(SpUtils.BRIGHT, 0);
+                SpUtils.putConfig(SpUtils.GAMA, 1.0f);
                 SpUtils.putConfig(SpUtils.CONTRAST, 0);
                 SpUtils.putBoolean(SpUtils.SWITCH, true);
 
@@ -488,14 +512,16 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 hue = 0;
                 sat = 0;
                 bright = 0;
+                gama = 1.0f;
                 contrast = 0;
                 auto = true;
 
-                tvTime.setText(60 + "s");
-                tvHue.setText(0 + "");
-                tvSat.setText(0 + "");
-                tvBright.setText(0 + "");
-                tvContrast.setText(0 + "");
+                tvTime.setText("60s");
+                tvHue.setText("0");
+                tvSat.setText("0");
+                tvBright.setText("0");
+                tvGama.setText("1");
+                tvContrast.setText("0");
                 tvMode.setText(auto ? getResources().getString(R.string.automatic_mode) : getResources().getString(R.string.manual_mode));
 
                 break;
@@ -561,7 +587,20 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
 
     }
 
-    private void showEditConfig(String title, int value, int min, int max, String msg, OnConfigListener listener) {
+    /**
+     * 伽马值调整
+     */
+    private void setGama() {
+
+        showEditConfig(getResources().getString(R.string.set_gama), gama, 0, 2, getResources().getString(R.string.set_gama_msg), value -> {
+
+            syncConfig2Raspberry(SpUtils.GAMA, value);
+        });
+
+
+    }
+
+    private void showEditConfig(String title, float value, int min, int max, String msg, OnConfigListener listener) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogStyle);
         LayoutInflater inflater = getLayoutInflater();
@@ -593,7 +632,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             }
 
             try {
-                int va = Integer.parseInt(etInput.getText().toString());
+                float va = Float.parseFloat(etInput.getText().toString());
 
                 if (va < min || va > max) {
                     showToast(getResources().getString(R.string.input_range) + min + "-" + max);

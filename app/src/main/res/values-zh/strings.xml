@@ -48,6 +48,8 @@
     <string name="set_sat_msg">饱和度-100~100</string>
     <string name="set_sat">饱和度调节</string>
     <string name="set_hue">色调调节</string>
+    <string name="set_gama">伽马值调节</string>
+    <string name="set_gama_msg">伽马值调整值在0到2范围内</string>
     <string name="set_hue_msg">色调调整偏移范围为0至360</string>
     <string name="set_contrast_msg">对比度调整偏移在-100到100的范围内</string>
     <string name="set_contrast">对比度调节</string>
@@ -58,6 +60,7 @@
     <string name="set_success">设置成功</string>
     <string name="set_fail">设置失败</string>
     <string name="automatic_mode">自动模式</string>
+    <string name="gama_offset">伽马值调节</string>
     <string name="manual_mode">手动模式</string>
     <string name="switch_to_auto">切换到自动模式</string>
     <string name="switch_to_manual">切换到手动模式</string>

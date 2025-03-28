@@ -2,6 +2,7 @@ package com.pi.connectraspberry.util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -68,9 +69,16 @@ public class SocketSender {
 
                     long l00 = System.currentTimeMillis();
                     byte[] cmdTypeBuffer = new byte[9];
+                    available = is.available();
+                    Log.d(TAG, "available===>" + available);
+                    if (available <= 0) {
+                        SystemClock.sleep(100);
+                        continue;
+                    }
+
                     int read3 = is.read(cmdTypeBuffer);
                     long l01 = System.currentTimeMillis();
-                    //Log.d(TAG, "read3的长度:" + read3 + ",时间间隔:" + (l01 - l00));
+                    Log.d(TAG, "read3的长度:" + read3 + ",时间间隔:" + (l01 - l00));
 
                     if (System.currentTimeMillis() - lastReceiveTime > TIME_OUT * 1000) {
                         Log.e(TAG, " 超时   断开连接 ????   ");
@@ -123,9 +131,10 @@ public class SocketSender {
 
                             //提取日志
                             extractionLog();
-
                         }
 
+                    } else {
+                        SystemClock.sleep(100);
                     }
 
                 }

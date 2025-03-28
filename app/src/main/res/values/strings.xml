@@ -51,12 +51,15 @@
     <string name="set_contrast_msg">Contrast adjustment offset within the range of -100 to 100</string>
     <string name="set_contrast">Set contrast offset</string>
     <string name="set_bright">Set bright offset</string>
+    <string name="set_gama">Set gama offset</string>
     <string name="set_bright_msg">The brightness adjustment offset range is -100 to 100</string>
+    <string name="set_gama_msg">Gamma value adjustment value is within the range of 0 to 2</string>
     <string name="reset">Reset</string>
     <string name="reset_confirm">Are you sure to reset config</string>
     <string name="set_success">Set success</string>
     <string name="set_fail">Set failed !!!</string>
     <string name="automatic_mode">Automatic mode</string>
+    <string name="gama_offset">Set gama</string>
     <string name="manual_mode">Manual mode</string>
     <string name="switch_to_auto">Switch to automatic mode</string>
     <string name="switch_to_manual">Switch to manual mode</string>

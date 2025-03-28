@@ -7,21 +7,30 @@ public class ConfigBean {
     private int sat;//饱和度调整范围为-100至100
     private int bright;//亮度调整范围为-100至100
     private int contrast;//对比度调整范围为-100至100
-
+    private float gama;//伽马值调整范围为0.1至2.0
     private boolean isAuto;
 
     public ConfigBean() {
     }
 
-    public ConfigBean(int seconds, int hue, int sat, int bright, int contrast, boolean isAuto) {
+    public ConfigBean(int seconds, int hue, int sat, int bright, int contrast, float gama, boolean isAuto) {
         this.seconds = seconds;
         this.hue = hue;
         this.sat = sat;
         this.bright = bright;
         this.contrast = contrast;
         this.isAuto = isAuto;
+        this.gama = gama;
     }
 
+
+    public float getGama() {
+        return gama;
+    }
+
+    public void setGama(float gama) {
+        this.gama = gama;
+    }
 
     public int getSeconds() {
         return seconds;
