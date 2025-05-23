@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/color_bg"
+    android:overScrollMode="never"
+    tools:context=".MainActivity">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/llRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clTitle"
+            android:layout_width="match_parent"
+            android:layout_height="84dp"
+            android:background="@mipmap/ic_home_title_bg"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/ivCheck"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="15dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_check"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="土星1号"
+                android:textColor="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent" />
+
+            <ImageView
+                android:id="@+id/ivSetting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="15dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_setting"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toRightOf="parent" />
+
+            <ImageView
+                android:id="@+id/ivCleanPic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="17dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_clean_pic"
+                app:layout_constraintBottom_toBottomOf="@id/ivSetting"
+                app:layout_constraintRight_toLeftOf="@id/ivSetting"
+                app:layout_constraintTop_toTopOf="@id/ivSetting" />
+
+            <ImageView
+                android:id="@+id/ivClassify"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="17dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_pics"
+                app:layout_constraintBottom_toBottomOf="@id/ivSetting"
+                app:layout_constraintRight_toLeftOf="@id/ivCleanPic"
+                app:layout_constraintTop_toTopOf="@id/ivSetting" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clMiddle"
+            android:layout_width="match_parent"
+            android:layout_height="454dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/shape_white_circle_qua"
+            app:layout_constraintTop_toBottomOf="@id/clTitle">
+
+
+            <TextView
+                android:id="@+id/tvPicUpload"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="17dp"
+                android:layout_marginTop="10dp"
+                android:text="@string/pic_upload"
+                android:textColor="@color/black"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+
+            <ImageView
+                android:id="@+id/ivWifi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="21dp"
+                android:layout_marginTop="17dp"
+                android:src="@drawable/ic_wifi_gray"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvPicUpload" />
+
+            <TextView
+                android:id="@+id/tvStep1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="13dp"
+                android:text="@string/step_1"
+                android:textColor="@color/black"
+                app:layout_constraintLeft_toLeftOf="@id/ivWifi"
+                app:layout_constraintRight_toRightOf="@id/ivWifi"
+                app:layout_constraintTop_toBottomOf="@id/ivWifi" />
+
+            <ImageView
+                android:id="@+id/ivSelect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="35dp"
+                android:layout_marginTop="17dp"
+                android:src="@drawable/ic_select_pic"
+                app:layout_constraintLeft_toRightOf="@id/ivWifi"
+                app:layout_constraintTop_toBottomOf="@id/tvPicUpload" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="13dp"
+                android:text="@string/step_2"
+                android:textColor="@color/black"
+                app:layout_constraintLeft_toLeftOf="@id/ivSelect"
+                app:layout_constraintRight_toRightOf="@id/ivSelect"
+                app:layout_constraintTop_toBottomOf="@id/ivWifi" />
+
+            <ImageView
+                android:id="@+id/ivSend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="35dp"
+                android:layout_marginTop="17dp"
+                android:src="@drawable/ic_send_frame"
+                app:layout_constraintLeft_toRightOf="@id/ivSelect"
+                app:layout_constraintTop_toBottomOf="@id/tvPicUpload" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="13dp"
+                android:text="@string/step_3"
+                android:textColor="@color/black"
+                app:layout_constraintLeft_toLeftOf="@id/ivSend"
+                app:layout_constraintRight_toRightOf="@id/ivSend"
+                app:layout_constraintTop_toBottomOf="@id/ivWifi" />
+
+            <ImageView
+                android:id="@+id/ivConvert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="35dp"
+                android:layout_marginTop="17dp"
+                android:src="@drawable/ic_convert"
+                app:layout_constraintLeft_toRightOf="@id/ivSend"
+                app:layout_constraintTop_toBottomOf="@id/tvPicUpload" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="13dp"
+                android:text="@string/step_4"
+                android:textColor="@color/black"
+                app:layout_constraintLeft_toLeftOf="@id/ivConvert"
+                app:layout_constraintRight_toRightOf="@id/ivConvert"
+                app:layout_constraintTop_toBottomOf="@id/ivWifi" />
+
+
+            <me.jingbin.library.ByRecyclerView
+                android:id="@+id/tvRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="15dp"
+                android:minHeight="300dp"
+                android:padding="5dp"
+                android:transcriptMode="alwaysScroll"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvStep1" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clControl"
+            android:layout_width="match_parent"
+            android:layout_height="104dp"
+            android:layout_marginTop="5dp"
+            android:background="@drawable/shape_white_circle_qua"
+            app:layout_constraintTop_toBottomOf="@+id/clMiddle">
+
+
+            <TextView
+                android:id="@+id/tvPlaySetting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/play_setting"
+                android:textColor="@color/black"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/ivAuto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="29dp"
+                android:src="@drawable/ic_auto_chosen"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/ivHand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:src="@drawable/ic_hand"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ivAuto" />
+
+
+            <TextView
+                android:id="@+id/tvPre"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="18dp"
+                android:text="@string/pre"
+                android:textColor="@color/black"
+                app:layout_constraintBottom_toBottomOf="@id/ivHand"
+                app:layout_constraintRight_toLeftOf="@id/ivHand"
+                app:layout_constraintTop_toTopOf="@id/ivHand" />
+
+            <ImageView
+                android:id="@+id/ivPre"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="4dp"
+                android:src="@drawable/ic_last"
+                app:layout_constraintBottom_toBottomOf="@id/ivHand"
+                app:layout_constraintRight_toLeftOf="@id/tvPre"
+                app:layout_constraintTop_toTopOf="@id/ivHand" />
+
+
+            <TextView
+                android:id="@+id/tvNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="18dp"
+                android:text="@string/next"
+                android:textColor="@color/black"
+                app:layout_constraintBottom_toBottomOf="@id/ivHand"
+                app:layout_constraintLeft_toRightOf="@id/ivHand"
+                app:layout_constraintTop_toTopOf="@id/ivHand" />
+
+            <ImageView
+                android:id="@+id/ivNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
+                android:src="@drawable/ic_next"
+                app:layout_constraintBottom_toBottomOf="@id/ivHand"
+                app:layout_constraintLeft_toRightOf="@id/tvNext"
+                app:layout_constraintTop_toTopOf="@id/ivHand" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="63dp"
+            android:layout_marginTop="5dp"
+            android:background="@drawable/shape_white_circle_qua"
+            app:layout_constraintTop_toBottomOf="@+id/clControl">
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/remote_control"
+                android:textColor="@color/black"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <ImageView
+            android:id="@+id/ivPreview"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="#33000000"
+            android:padding="10dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/tvTitle"-->
+        <!--        android:layout_width="wrap_content"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:layout_marginTop="10dp"-->
+        <!--        android:text="@string/app_name"-->
+        <!--        android:textSize="15dp"-->
+        <!--        android:textStyle="bold"-->
+        <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--        app:layout_constraintRight_toRightOf="parent"-->
+        <!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+
+        <!--    <androidx.constraintlayout.widget.ConstraintLayout-->
+        <!--        android:id="@+id/clWifi"-->
+        <!--        android:layout_width="wrap_content"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:layout_marginTop="10dp"-->
+        <!--        android:background="@drawable/shape_wifi_bg"-->
+        <!--        android:clickable="true"-->
+        <!--        android:padding="8dp"-->
+        <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--        app:layout_constraintRight_toRightOf="parent"-->
+        <!--        app:layout_constraintTop_toBottomOf="@id/tvTitle">-->
+
+
+        <!--        <TextView-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginLeft="8dp"-->
+        <!--            android:text="@string/home_connect"-->
+        <!--            android:textSize="15dp"-->
+        <!--            app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--            app:layout_constraintLeft_toRightOf="@id/ivWifi"-->
+        <!--            app:layout_constraintTop_toTopOf="parent" />-->
+
+        <!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+
+        <!--    <androidx.constraintlayout.widget.ConstraintLayout-->
+        <!--        android:id="@+id/clSend"-->
+        <!--        android:layout_width="match_parent"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        app:layout_constraintTop_toBottomOf="@id/clWifi">-->
+
+        <!--        <ImageView-->
+        <!--            android:id="@+id/ivSend"-->
+        <!--            android:layout_width="130dp"-->
+        <!--            android:layout_height="50dp"-->
+        <!--            android:background="@drawable/shape_send_bg"-->
+        <!--            app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--            app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--            app:layout_constraintRight_toRightOf="parent"-->
+        <!--            app:layout_constraintTop_toTopOf="parent" />-->
+
+        <!--        <TextView-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginRight="10dp"-->
+        <!--            android:text="@string/home_send"-->
+        <!--            android:textColor="@color/white"-->
+        <!--            android:textSize="15dp"-->
+        <!--            android:textStyle="bold"-->
+        <!--            app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--            app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--            app:layout_constraintRight_toRightOf="parent"-->
+        <!--            app:layout_constraintTop_toTopOf="parent" />-->
+
+        <!--        <ImageView-->
+        <!--            android:layout_width="20dp"-->
+        <!--            android:layout_height="20dp"-->
+        <!--            android:layout_marginRight="8dp"-->
+        <!--            android:src="@mipmap/ic_send"-->
+        <!--            app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--            app:layout_constraintRight_toRightOf="@id/ivSend"-->
+        <!--            app:layout_constraintTop_toTopOf="parent" />-->
+
+        <!--        <ImageView-->
+        <!--            android:id="@+id/ivSelect"-->
+        <!--            android:layout_width="65dp"-->
+        <!--            android:layout_height="65dp"-->
+        <!--            android:layout_marginRight="20dp"-->
+        <!--            android:background="@drawable/shape_select_pic_bg"-->
+        <!--            app:layout_constraintBottom_toBottomOf="@id/ivSend"-->
+        <!--            app:layout_constraintRight_toLeftOf="@id/ivSend"-->
+        <!--            app:layout_constraintTop_toTopOf="@id/ivSend" />-->
+
+        <!--        <ImageView-->
+        <!--            android:id="@+id/ivPic"-->
+        <!--            android:layout_width="30dp"-->
+        <!--            android:layout_height="30dp"-->
+        <!--            android:layout_marginTop="5dp"-->
+        <!--            android:src="@mipmap/ic_select_pic"-->
+        <!--            app:layout_constraintLeft_toLeftOf="@id/ivSelect"-->
+        <!--            app:layout_constraintRight_toRightOf="@id/ivSelect"-->
+        <!--            app:layout_constraintTop_toTopOf="@id/ivSelect" />-->
+
+        <!--        <TextView-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:text="@string/home_select"-->
+        <!--            android:textSize="15dp"-->
+        <!--            android:textStyle="bold"-->
+        <!--            app:layout_constraintLeft_toLeftOf="@id/ivPic"-->
+        <!--            app:layout_constraintRight_toRightOf="@id/ivPic"-->
+        <!--            app:layout_constraintTop_toBottomOf="@id/ivPic" />-->
+
+        <!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+        <!--    &lt;!&ndash;    <EditText&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:id="@+id/etSecond"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:layout_width="80dp"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:layout_height="30dp"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:layout_marginTop="15dp"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:background="@color/gray"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:hint="60"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:paddingLeft="5dp"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:textColor="@color/white"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        android:textColorHint="@color/white"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        app:layout_constraintLeft_toLeftOf="parent"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        app:layout_constraintRight_toRightOf="parent"&ndash;&gt;-->
+        <!--    &lt;!&ndash;        app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />&ndash;&gt;-->
+
+        <!--    <ImageView-->
+        <!--        android:id="@+id/ivConvert"-->
+        <!--        android:layout_width="130dp"-->
+        <!--        android:layout_height="50dp"-->
+        <!--        android:layout_marginTop="30dp"-->
+        <!--        android:src="@drawable/shape_convert_bg"-->
+        <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--        app:layout_constraintRight_toRightOf="parent"-->
+        <!--        app:layout_constraintTop_toBottomOf="@id/tvRecyclerView" />-->
+
+        <!--    <TextView-->
+        <!--        android:layout_width="wrap_content"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:layout_marginRight="10dp"-->
+        <!--        android:text="@string/home_convert"-->
+        <!--        android:textColor="@color/black"-->
+        <!--        android:textStyle="bold"-->
+        <!--        app:layout_constraintBottom_toBottomOf="@id/ivConvert"-->
+        <!--        app:layout_constraintLeft_toLeftOf="@id/ivConvert"-->
+        <!--        app:layout_constraintRight_toRightOf="@id/ivConvert"-->
+        <!--        app:layout_constraintTop_toTopOf="@id/ivConvert" />-->
+
+        <!--    <ImageView-->
+        <!--        android:layout_width="20dp"-->
+        <!--        android:layout_height="20dp"-->
+        <!--        android:layout_marginRight="8dp"-->
+        <!--        android:src="@mipmap/ic_convert_blue"-->
+        <!--        app:layout_constraintBottom_toBottomOf="@id/ivConvert"-->
+        <!--        app:layout_constraintRight_toRightOf="@id/ivConvert"-->
+        <!--        app:layout_constraintTop_toTopOf="@id/ivConvert" />-->
+
+        <!--    <ImageView-->
+        <!--        android:id="@+id/ivPre"-->
+        <!--        android:layout_width="40dp"-->
+        <!--        android:layout_height="40dp"-->
+        <!--        android:layout_marginRight="30dp"-->
+        <!--        android:background="?android:attr/selectableItemBackgroundBorderless"-->
+        <!--        android:src="@mipmap/ic_last"-->
+        <!--        app:layout_constraintBottom_toBottomOf="@id/ivConvert"-->
+        <!--        app:layout_constraintRight_toLeftOf="@id/ivConvert"-->
+        <!--        app:layout_constraintTop_toTopOf="@id/ivConvert" />-->
+
+        <!--    <ImageView-->
+        <!--        android:id="@+id/ivNext"-->
+        <!--        android:layout_width="40dp"-->
+        <!--        android:layout_height="40dp"-->
+        <!--        android:layout_marginLeft="30dp"-->
+        <!--        android:background="?android:attr/selectableItemBackgroundBorderless"-->
+        <!--        android:src="@mipmap/ic_next"-->
+        <!--        app:layout_constraintBottom_toBottomOf="@id/ivConvert"-->
+        <!--        app:layout_constraintLeft_toRightOf="@id/ivConvert"-->
+        <!--        app:layout_constraintTop_toTopOf="@id/ivConvert" />-->
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/tvSlide"-->
+        <!--        android:layout_width="150dp"-->
+        <!--        android:layout_height="40dp"-->
+        <!--        android:layout_marginTop="10dp"-->
+        <!--        android:background="@drawable/shape_slide_bg"-->
+        <!--        android:gravity="center"-->
+        <!--        android:text="@string/auto_slide_show"-->
+        <!--        android:textColor="@color/white"-->
+        <!--        android:textStyle="bold"-->
+        <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--        app:layout_constraintRight_toRightOf="parent"-->
+        <!--        app:layout_constraintTop_toBottomOf="@id/ivConvert" />-->
+
+        <!--    <ImageView-->
+        <!--        android:id="@+id/ivPreview"-->
+        <!--        android:layout_width="match_parent"-->
+        <!--        android:layout_height="match_parent"-->
+        <!--        android:background="#33000000"-->
+        <!--        android:padding="10dp"-->
+        <!--        android:visibility="gone" />-->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

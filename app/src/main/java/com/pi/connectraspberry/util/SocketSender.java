@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -38,7 +39,7 @@ import java.util.concurrent.ExecutorService;
 public class SocketSender {
 
     private static final String SERVER_IP = "192.168.12.1"; // 替换为树莓派的IP
-    private static final int SERVER_PORT = 12345;
+    private static final int SERVER_PORT = 55522;
     private static final String TAG = "SocketSender";
     private static final int CONNECT_TIME_OUT = 1000 * 5;
     private static Socket socket;
@@ -56,6 +57,8 @@ public class SocketSender {
 
     static int disconnectCount = 0;
 
+    static long first_disconn = 0;
+
     /**
      * 接受消息
      */
@@ -69,23 +72,25 @@ public class SocketSender {
 
                     long l00 = System.currentTimeMillis();
                     byte[] cmdTypeBuffer = new byte[9];
-                    available = is.available();
-                    Log.d(TAG, "available===>" + available);
-                    if (available <= 0) {
-                        SystemClock.sleep(100);
-                        continue;
-                    }
+//                    available = is.available();
+//
+//                    if (available <= 0) {
+//                        SystemClock.sleep(100);
+//                        continue;
+//                    }
 
                     int read3 = is.read(cmdTypeBuffer);
-                    long l01 = System.currentTimeMillis();
-                    Log.d(TAG, "read3的长度:" + read3 + ",时间间隔:" + (l01 - l00));
+//                    long l01 = System.currentTimeMillis();
+                    //Log.d(TAG, "read3的长度:" + read3 + ",时间间隔:" + (l01 - l00));
 
                     if (System.currentTimeMillis() - lastReceiveTime > TIME_OUT * 1000) {
                         Log.e(TAG, " 超时   断开连接 ????   ");
+                        if (disconnectCount == 0)
+                            first_disconn = System.currentTimeMillis();
                         disconnectCount++;
                     }
 
-                    if (disconnectCount > 3) {
+                    if (disconnectCount > 3 && System.currentTimeMillis() - first_disconn > 1000 * 5) {
                         Log.e(TAG, "  超过三次，断开连接   ");
                         closeSocket();
                         if (socketListener != null)
@@ -131,6 +136,9 @@ public class SocketSender {
 
                             //提取日志
                             extractionLog();
+                        } else if (MyCommand.CMD_LOP.equals(messageFromServer)) {
+                            //是否是循环模式
+                            getLoopMode();
                         }
 
                     } else {
@@ -272,6 +280,27 @@ public class SocketSender {
         }
     }
 
+    private static void getLoopMode() {
+        try {
+            byte[] lengthBuffer = new byte[4];
+            int r = is.read(lengthBuffer);
+            int cmdLength = ByteBuffer.wrap(lengthBuffer).getInt();
+//            Log.d(TAG, "是否loop的长度:" + cmdLength);
+            //
+            byte[] cmdBuffer = new byte[cmdLength];
+            int read2 = is.read(cmdBuffer);
+            //获取指令内容
+            String cmd = new String(cmdBuffer, StandardCharsets.UTF_8);
+            Log.d(TAG, "是否是循环模式::" + cmd);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+
+    }
+
     private static void picCommand() {
         //接受文件名长度
         try {
@@ -327,8 +356,11 @@ public class SocketSender {
 
             socketListener = listener;
 
-            if (socket == null)
+            if (socket == null) {
                 socket = new Socket(SERVER_IP, SERVER_PORT);
+                socket.setTcpNoDelay(true);  // 禁用Nagle
+            }
+
 //                socket = new Socket();
 
 //            socket.connect(new InetSocketAddress(SERVER_IP, SERVER_PORT), CONNECT_TIME_OUT);

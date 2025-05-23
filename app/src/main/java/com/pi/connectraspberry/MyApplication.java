@@ -10,6 +10,8 @@ import com.orhanobut.logger.PrettyFormatStrategy;
 import com.pi.connectraspberry.ui.SettingActivity;
 import com.pi.connectraspberry.util.FileUtils;
 
+import me.jessyan.autosize.AutoSizeConfig;
+
 public class MyApplication extends Application {
 
     public static MyApplication instance;
@@ -26,6 +28,15 @@ public class MyApplication extends Application {
         super.onCreate();
 
         instance = this;
+
+
+        // 初始化 AutoSize
+        AutoSizeConfig.getInstance()
+                // 设置设计图尺寸（单位随意，只要保持一致即可）
+                .setDesignWidthInDp(360)
+                .setDesignHeightInDp(720)
+                // 是否让框架支持自定义 Fragment 的适配参数
+                .setCustomFragment(true);
 
         FileUtils.clearInternalCache(this);
 

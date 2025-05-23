@@ -39,7 +39,7 @@
     <string name="contrast_offset">对比度偏移调整</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
-    <string name="ok">成功</string>
+    <string name="ok">确定</string>
     <string name="input_empty">请输入内容</string>
     <string name="input_range">输入范围在</string>
     <string name="input_error">非法输入</string>

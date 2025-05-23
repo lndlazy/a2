@@ -110,7 +110,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         hue = SpUtils.getConfig(SpUtils.HUE, 0);
         sat = SpUtils.getConfig(SpUtils.SAT, 0);
         bright = SpUtils.getConfig(SpUtils.BRIGHT, 0);
-        gama = SpUtils.getConfig(SpUtils.GAMA, 1);
+        gama = SpUtils.getConfig(SpUtils.GAMA, 1.0f);
         contrast = SpUtils.getConfig(SpUtils.CONTRAST, 0);
         auto = SpUtils.getBoolean(SpUtils.SWITCH, true);
 
@@ -193,7 +193,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 break;
 
             case R.id.clClearData:
-                //清除数据
+                //清除数据， 清除render_folder目录下的图片,清除分类文件夹和文件夹下的文件，清除备份的文件内容，图片md5数据清除
                 showClearDataDialog();
                 break;
 
@@ -376,7 +376,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
      */
     private void setPicPlayTimes() {
 
-        showEditConfig(getResources().getString(R.string.set_play_interval), seconds, 60, 999, getResources().getString(R.string.play_interval_msg), value -> {
+        showEditConfig(getResources().getString(R.string.set_play_interval), seconds, 10, 9999999, getResources().getString(R.string.play_interval_msg), value -> {
 
             syncConfig2Raspberry(SpUtils.PLAY_INTERVAL, value);
 
@@ -644,7 +644,12 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 return;
             }
 
-            if (listener != null) listener.onConfig(Integer.parseInt(etInput.getText().toString()));
+            try {
+                if (listener != null)
+                    listener.onConfig(Float.parseFloat(etInput.getText().toString()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             hiddenConfigDialog(dialog);
         });
@@ -660,7 +665,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     }
 
     interface OnConfigListener {
-        void onConfig(int value);
+        void onConfig(float value);
     }
 
 }

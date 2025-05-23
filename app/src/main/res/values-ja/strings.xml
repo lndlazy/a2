@@ -38,7 +38,7 @@
     <string name="contrast_offset">コントラストオフセット調整</string>
     <string name="confirm">を選択して、</string>
     <string name="cancel">キャンセル</string>
-    <string name="ok">成功</string>
+    <string name="ok">を選択して、</string>
     <string name="input_empty">内容を入力してください</string>
     <string name="input_range">入力範囲は</string>
     <string name="input_error">不正入力</string>

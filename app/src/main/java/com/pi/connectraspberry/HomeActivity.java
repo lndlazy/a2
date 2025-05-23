@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.IBinder;
 import android.text.TextUtils;
@@ -77,17 +78,27 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
     @Override
     protected int getLayoutId() {
-        return R.layout.activity_home;
+
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+
+// 状态栏文字黑色
+//        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+// 状态栏文字白色
+ getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        return R.layout.activity_home_new;
     }
 
     String classifyName = " ";
 
     @Override
     protected void initView() {
+
+
         //请求权限
         mRequestPermission();
 
-        ConstraintLayout clWifi = findViewById(R.id.clWifi);
+
         ImageView ivSend = findViewById(R.id.ivSend);
         ivWifi = findViewById(R.id.ivWifi);
         ImageView ivSetting = findViewById(R.id.ivSetting);
@@ -99,16 +110,19 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         ivPreview = findViewById(R.id.ivPreview);
         ImageView ivPre = findViewById(R.id.ivPre);
         ImageView ivNext = findViewById(R.id.ivNext);
-        TextView tvSlide = findViewById(R.id.tvSlide);
+
+        ImageView ivAuto = findViewById(R.id.ivAuto);
+        ImageView ivHand = findViewById(R.id.ivHand);
 //        etSecond = findViewById(R.id.etSecond);
         tvRecyclerView = findViewById(R.id.tvRecyclerView);
         initRecyclerView();
 
-        clWifi.setOnClickListener(this);
+        ivWifi.setOnClickListener(this);
         ivSend.setOnClickListener(this);
         ivSelect.setOnClickListener(this);
         ivConvert.setOnClickListener(this);
-        tvSlide.setOnClickListener(this);
+        ivAuto.setOnClickListener(this);
+        ivHand.setOnClickListener(this);
         ivPre.setOnClickListener(this);
         ivPreview.setOnClickListener(this);
         ivNext.setOnClickListener(this);
@@ -284,11 +298,11 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
         ToastUtil.show(getResources().getString(R.string.connect_success));
         if (CommUtils.isMainLooper()) {
-            showPic(ivWifi, R.mipmap.ic_wifi_blue);
+            showPic(ivWifi, R.drawable.ic_wifi_blue);
 
         } else
             runOnUiThread(() -> {
-                showPic(ivWifi, R.mipmap.ic_wifi_blue);
+                showPic(ivWifi, R.drawable.ic_wifi_blue);
             });
 
     }
@@ -299,11 +313,11 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         hideProgressDialog();
 
         if (CommUtils.isMainLooper()) {
-            showPic(ivWifi, R.mipmap.ic_wifi_gray);
+            showPic(ivWifi, R.drawable.ic_wifi_gray);
             showToast(getResources().getString(R.string.connect_lost));
         } else
             runOnUiThread(() -> {
-                showPic(ivWifi, R.mipmap.ic_wifi_gray);
+                showPic(ivWifi, R.drawable.ic_wifi_gray);
                 showToast(getResources().getString(R.string.connect_lost));
             });
     }
@@ -500,7 +514,8 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                         if (FileUtils.isSizeNormal(pathFromUri)) {
                             //既是BMP图片，且像素符合要求 * @param sourceFile原图片文件  * @param targetDirectory 目标目录    * @param targetFileName 目标文件名称
                             String targetDirectory = FileUtils.getLocalBasePath();
-                            String targetFileName = UUID.randomUUID() + "_" + i + ".bmp";
+                            String targetFileName = UUID.randomUUID() + "_" + currentIndex + ".bmp";
+                            Log.d(TAG, "文件拷贝的地址：" + targetDirectory + "," + targetFileName);
                             FileUtils.copyPic2CurrentFile(new File(pathFromUri), targetDirectory, targetFileName);
                             File file = new File(targetDirectory, targetFileName);
                             addPic(currentIndex, file.getPath());
@@ -538,9 +553,9 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 //            Log.d(TAG, "排列前::" + s);
 //        }
         CommUtils.sortListByNumber(alreadyList);
-//        for (String s : alreadyList) {
-//            Log.d(TAG, "排列后::" + s);
-//        }
+        for (String s : alreadyList) {
+            Log.d(TAG, "排列后::" + s);
+        }
 
         if (mAdapter != null)
             mAdapter.notifyDataSetChanged();
@@ -607,7 +622,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                         File f = new File(resultUri.getPath());
                         Log.d(TAG, "文件名称:::" + f.getName());
                         lastIndex = CommUtils.extractStr(f.getName());
-                        File file = new File(getCacheDir(), UUID.randomUUID() + "_" + lastIndex + ".bmp");
+                        File file = new File(FileUtils.getLocalBasePath(), UUID.randomUUID() + "_" + lastIndex + ".bmp");
 
                         BMPUtils.convertToBMP(scaledBitmap, file.getPath());
 
@@ -674,13 +689,13 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
         switch (view.getId()) {
 
-            case R.id.clWifi://连接wifi
+            case R.id.ivWifi://连接wifi
                 showProgressDialog(getResources().getString(R.string.connecting));
                 connectSocket();
 //                showToast(" connect wifi ");
                 break;
 
-            case R.id.ivSend://发送图片
+            case R.id.ivSend://发送图片 发送到render_folder目录下
                 sendPic();
                 break;
 
@@ -692,8 +707,12 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                 convertPic();
                 break;
 
-            case R.id.tvSlide:
+            case R.id.ivAuto:// 自动/手动
                 auto();
+                break;
+
+            case R.id.ivHand:// 自动/手动播放
+                hand();
                 break;
 
             case R.id.ivPre://上一张
@@ -716,7 +735,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                 hiddenPicPreView();
                 break;
 
-            case R.id.ivCleanPic://清理图片
+            case R.id.ivCleanPic://清理render_folder目录下的图片
                 clearPic();
                 break;
 
@@ -751,9 +770,9 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
         Log.d(TAG, "图片张数===>>" + alreadyList.size());
 
-//        for (String s : alreadyList) {
-//            Log.d(TAG, " 图片路径 :" + s);
-//        }
+        for (String s : alreadyList) {
+            Log.d(TAG, " 图片路径 :" + s);
+        }
 
         showProgressDialog(getResources().getString(R.string.sending));
 
@@ -851,6 +870,14 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         }
     };
 
+    Runnable handRunnable = () -> {
+        boolean b = SocketSender.sendCommand(MyCommand.COMMAND_HAND);
+        //showToast(b ? "发送成功" : "发送失败");
+        if (!b) {
+            noConnectStatus();
+        }
+    };
+
     Runnable preRunnable = () -> {
         boolean b = SocketSender.sendCommand(MyCommand.COMMAND_PRE);
         //showToast(b ? "发送成功" : "发送失败");
@@ -869,6 +896,9 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
     private void auto() {
         ThreadUtil.getParallelExecutor().execute(autoRunnable);
+    }
+    private void hand() {
+        ThreadUtil.getParallelExecutor().execute(handRunnable);
     }
 
     private void chooseNextPic() {

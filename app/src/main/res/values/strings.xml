@@ -77,5 +77,14 @@
     <string name="get_log_msg">Are you sure you want to extract the logs of Raspberry Pi？</string>
     <string name="extraction_fail">Extraction failed !!!</string>
     <string name="log_extraction_success">Log extraction successful, saved in A2 directory</string>
+    <string name="pic_upload">图片上传</string>
+    <string name="step_1">1.连接</string>
+    <string name="step_2">2.选择</string>
+    <string name="step_3">3.发送</string>
+    <string name="step_4">4.转换</string>
+    <string name="play_setting">播放设置</string>
+    <string name="pre">上一张</string>
+    <string name="next">下一张</string>
+    <string name="remote_control">远程操控</string>
 
 </resources>
