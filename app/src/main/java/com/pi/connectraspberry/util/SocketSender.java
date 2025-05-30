@@ -12,6 +12,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.pi.connectraspberry.MyApplication;
 import com.pi.connectraspberry.bean.ConfigBean;
 import com.pi.connectraspberry.bean.FolderBean;
+import com.pi.connectraspberry.service.EventMsg;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -292,12 +293,15 @@ public class SocketSender {
             //获取指令内容
             String cmd = new String(cmdBuffer, StandardCharsets.UTF_8);
             Log.d(TAG, "是否是循环模式::" + cmd);
+            if ("1".equals(cmd)) {
+                EventBus.getDefault().post(EventMsg.LOOP_HANDLE);
+            }else {
+                EventBus.getDefault().post(EventMsg.LOOP_AUTO);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-
 
     }
 

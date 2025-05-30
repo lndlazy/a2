@@ -66,7 +66,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         ImageView ivBack = findViewById(R.id.ivBack);
         ivBack.setOnClickListener(v -> finish());
 
-        TextView tvReset = findViewById(R.id.tvReset);
+        ImageView ivReset = findViewById(R.id.ivReset);
         tvMode = findViewById(R.id.tvMode);
 
         tvTime = findViewById(R.id.tvTime);
@@ -94,7 +94,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         clSat.setOnClickListener(this);
         clBright.setOnClickListener(this);
         clContrast.setOnClickListener(this);
-        tvReset.setOnClickListener(this);
+        ivReset.setOnClickListener(this);
         clSwitch.setOnClickListener(this);
         clLanguage.setOnClickListener(this);
         clClearData.setOnClickListener(this);
@@ -182,7 +182,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 modeSwitch();
                 break;
 
-            case R.id.tvReset:
+            case R.id.ivReset:
                 //重置設置
                 resetConfig();
                 break;

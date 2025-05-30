@@ -74,6 +74,8 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
     String[] pers = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE};
     private ImageView ivWifi;
+    private ImageView ivAuto;
+    private ImageView ivHand;
 
 
     @Override
@@ -85,7 +87,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 // 状态栏文字黑色
 //        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 // 状态栏文字白色
- getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         return R.layout.activity_home_new;
     }
 
@@ -109,10 +111,12 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         ImageView ivCheck = findViewById(R.id.ivCheck);
         ivPreview = findViewById(R.id.ivPreview);
         ImageView ivPre = findViewById(R.id.ivPre);
+        TextView tvPre = findViewById(R.id.tvPre);
         ImageView ivNext = findViewById(R.id.ivNext);
+        TextView tvNext = findViewById(R.id.tvNext);
 
-        ImageView ivAuto = findViewById(R.id.ivAuto);
-        ImageView ivHand = findViewById(R.id.ivHand);
+        ivAuto = findViewById(R.id.ivAuto);
+        ivHand = findViewById(R.id.ivHand);
 //        etSecond = findViewById(R.id.etSecond);
         tvRecyclerView = findViewById(R.id.tvRecyclerView);
         initRecyclerView();
@@ -124,12 +128,14 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         ivAuto.setOnClickListener(this);
         ivHand.setOnClickListener(this);
         ivPre.setOnClickListener(this);
+        tvPre.setOnClickListener(this);
         ivPreview.setOnClickListener(this);
         ivNext.setOnClickListener(this);
         ivSetting.setOnClickListener(this);
         ivClassify.setOnClickListener(this);
         ivCleanPic.setOnClickListener(this);
         ivCheck.setOnClickListener(this);
+        tvNext.setOnClickListener(this);
 
     }
 
@@ -215,12 +221,31 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                 noConnectStatus();
                 break;
 
-            case EventMsg.CLEAR_PIC_DATA:// 清除数据
-                clearPicData();
+            case EventMsg.LOOP_AUTO:// 自动
+                loopMode(1);
+                break;
+
+            case EventMsg.LOOP_HANDLE:// 手动
+                loopMode(0);
                 break;
 
         }
 
+    }
+
+    private void loopMode(int i) {
+        switch (i) {
+            case 0:
+                ivAuto.setImageResource(R.drawable.ic_auto_chosen);
+                ivHand.setImageResource(R.drawable.ic_hand);
+                break;
+
+            case 1:
+                ivAuto.setImageResource(R.drawable.ic_auto);
+                ivHand.setImageResource(R.drawable.ic_hand_chosen);
+                break;
+
+        }
     }
 
 
@@ -716,6 +741,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                 break;
 
             case R.id.ivPre://上一张
+            case R.id.tvPre://上一张
                 choosePrePic();
                 break;
 
@@ -728,6 +754,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                 break;
 
             case R.id.ivNext://下一张
+            case R.id.tvNext://下一张
                 chooseNextPic();
                 break;
 
@@ -897,6 +924,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
     private void auto() {
         ThreadUtil.getParallelExecutor().execute(autoRunnable);
     }
+
     private void hand() {
         ThreadUtil.getParallelExecutor().execute(handRunnable);
     }
