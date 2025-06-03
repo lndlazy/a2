@@ -22,7 +22,6 @@
         android:paddingLeft="10dp"
         android:text="folder name"
         android:textColor="@color/black"
-
         android:textSize="15sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toRightOf="@id/iv"

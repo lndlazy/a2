@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">A2 Convert</string>
-    <string name="classify">Classify</string>
+    <string name="classify">All photo collections</string>
     <string name="home_connect">1.Connect</string>
     <string name="home_send">3.Send</string>
     <string name="home_select">2.Select</string>

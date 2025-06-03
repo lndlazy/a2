@@ -1,7 +1,7 @@
 <resources>
 
     <string name="app_name">A2 Convert</string>
-    <string name="classify">分类</string>
+    <string name="classify">所有图集</string>
     <string name="home_connect">1.连接</string>
     <string name="home_send">3.发送</string>
     <string name="home_select">2.选择</string>

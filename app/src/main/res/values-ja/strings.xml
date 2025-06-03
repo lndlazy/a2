@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">A2 Convert</string>
-    <string name="classify">分類</string>
+    <string name="classify">すべてのギャラリー</string>
     <string name="home_connect">1.せつぞく</string>
     <string name="home_send">3.送信</string>
     <string name="home_select">2.せんたく</string>
