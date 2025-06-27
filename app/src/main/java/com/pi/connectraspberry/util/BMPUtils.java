@@ -1,6 +1,11 @@
 package com.pi.connectraspberry.util;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.util.Log;
 
 import java.io.BufferedOutputStream;
@@ -149,5 +154,111 @@ public class BMPUtils {
         return buffer;
     }
 
+
+
+    public static final int WEIGHT = 10;//Atkinson 默认使用 1/8 的误差扩散权重，可以 减少扩散量 让颜色更集中（显得更深）
+
+
+
+    // 预处理：HSV色彩空间增强饱和度
+    //在抖动前，先通过 HSV 模型 提升原图饱和度：
+    public static Bitmap increaseSaturation(Bitmap original) {
+        Bitmap saturated = Bitmap.createBitmap(original.getWidth(), original.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(saturated);
+        Paint paint = new Paint();
+
+        // HSV 调整矩阵：提高饱和度（S通道）
+        ColorMatrix saturationMatrix = new ColorMatrix();
+        saturationMatrix.setSaturation(1.2f); // 1.0为原图，建议1.5~2.0
+
+        paint.setColorFilter(new ColorMatrixColorFilter(saturationMatrix));
+        canvas.drawBitmap(original, 0, 0, paint);
+        return saturated;
+    }
+
+    public static Bitmap applyAtkinsonDithering(Bitmap originalBitmap, int[] palette) {
+        int width = originalBitmap.getWidth();
+        int height = originalBitmap.getHeight();
+        Bitmap ditheredBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+        int[] pixels = new int[width * height];
+        originalBitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int index = y * width + x;
+                int originalColor = pixels[index];
+                int closestColor = findClosestPaletteColor(originalColor, palette);
+                ditheredBitmap.setPixel(x, y, closestColor);
+
+                int errorR = Color.red(originalColor) - Color.red(closestColor);
+                int errorG = Color.green(originalColor) - Color.green(closestColor);
+                int errorB = Color.blue(originalColor) - Color.blue(closestColor);
+
+                // Atkinson 误差扩散（比 Floyd-Steinberg 更分散）
+                if (x + 1 < width) {
+                    distributeError(pixels, index + 1, errorR, errorG, errorB, 1.0 / WEIGHT);
+                }
+                if (x + 2 < width) {
+                    distributeError(pixels, index + 2, errorR, errorG, errorB, 1.0 / WEIGHT);
+                }
+                if (y + 1 < height) {
+                    if (x - 1 >= 0) {
+                        distributeError(pixels, index + width - 1, errorR, errorG, errorB, 1.0 / WEIGHT);
+                    }
+                    distributeError(pixels, index + width, errorR, errorG, errorB, 1.0 / WEIGHT);
+                    if (x + 1 < width) {
+                        distributeError(pixels, index + width + 1, errorR, errorG, errorB, 1.0 / WEIGHT);
+                    }
+                }
+                if (y + 2 < height) {
+                    distributeError(pixels, index + 2 * width, errorR, errorG, errorB, 1.0 / WEIGHT);
+                }
+            }
+        }
+
+        return ditheredBitmap;
+    }
+
+    // 找到最接近调色板的颜色
+    private static int findClosestPaletteColor(int color, int[] palette) {
+        int minDistance = Integer.MAX_VALUE;
+        int closestColor = 0;
+        int r = Color.red(color);
+        int g = Color.green(color);
+        int b = Color.blue(color);
+
+        for (int paletteColor : palette) {
+            int pr = Color.red(paletteColor);
+            int pg = Color.green(paletteColor);
+            int pb = Color.blue(paletteColor);
+
+            // 增加对深色的偏好（例如通过亮度加权）
+//            double brightnessWeight = 1.0 - (0.299 * pr + 0.587 * pg + 0.114 * pb) / 255;
+//            int distance = (int) ((r - pr) * (r - pr) + (g - pg) * (g - pg) + (b - pb) * (b - pb) * brightnessWeight);
+
+            int distance = (r - pr) * (r - pr) + (g - pg) * (g - pg) + (b - pb) * (b - pb);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestColor = paletteColor;
+            }
+        }
+        return closestColor;
+    }
+
+    // 扩散误差到邻近像素
+    private static void distributeError(int[] pixels, int index, int errorR, int errorG, int errorB, double factor) {
+        int pixel = pixels[index];
+        int newR = Color.red(pixel) + (int) (errorR * factor);
+        int newG = Color.green(pixel) + (int) (errorG * factor);
+        int newB = Color.blue(pixel) + (int) (errorB * factor);
+        pixels[index] = Color.rgb(clamp(newR), clamp(newG), clamp(newB));
+    }
+
+    // 确保 RGB 值在 0-255 范围内
+    private static int clamp(int value) {
+        return Math.max(0, Math.min(255, value));
+    }
 
 }

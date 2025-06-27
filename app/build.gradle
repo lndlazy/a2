@@ -6,7 +6,7 @@ android {
     compileSdk 28
 
     defaultConfig {
-        applicationId "com.pi.connectraspberry"
+        applicationId "com.pi.test"
         minSdk 21
         targetSdk 28
         versionCode 1

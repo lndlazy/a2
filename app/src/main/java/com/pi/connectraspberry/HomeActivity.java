@@ -19,7 +19,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 
@@ -36,10 +35,10 @@ import com.pi.connectraspberry.ui.SettingActivity;
 import com.pi.connectraspberry.util.BMPUtils;
 import com.pi.connectraspberry.util.CommUtils;
 import com.pi.connectraspberry.util.FileUtils;
-import com.pi.connectraspberry.util.MD5Util;
-import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ImageUtil;
+import com.pi.connectraspberry.util.MD5Util;
 import com.pi.connectraspberry.util.MyCommand;
+import com.pi.connectraspberry.util.SocketSender;
 import com.pi.connectraspberry.util.ThreadUtil;
 import com.yalantis.ucrop.UCrop;
 import com.yalantis.ucrop.callback.BitmapLoadCallback;
@@ -52,6 +51,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -503,6 +503,42 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
     //    private boolean hasIllegalPic = false;
     private Uri originalUri = null;
 
+
+    //1. 调整调色板（让颜色更深）
+
+    // 定义调色板（4 色或 6 色墨水屏适用的颜色）
+//    int[] palette4Color = {
+//            Color.BLACK,      // 黑
+//            Color.WHITE,      // 白
+//            Color.RED,     // 浅灰
+//            Color.YELLOW      // 深灰
+//    };
+
+    int[] palette4Color = {
+            Color.BLACK,      // 黑
+            Color.WHITE,      // 白
+            Color.rgb(255, 40, 0),   // 橙红色（减少绿色干扰）
+            Color.rgb(255, 200, 0)   // 金黄色（减少蓝色干扰）
+    };
+
+
+    // 调整后的调色板（更深）
+    private static final int[] DARKER_INK_SCREEN_PALETTE = {
+            Color.BLACK,
+            Color.WHITE,
+            Color.rgb(180, 0, 0),    // 深红（降低亮度）
+            Color.rgb(180, 180, 0)   // 深黄（减少绿色分量）
+    };
+
+    int[] palette6Color = {
+            Color.BLACK,      // 黑
+            Color.WHITE,      // 白
+            Color.LTGRAY,     // 浅灰
+            Color.DKGRAY,     // 深灰
+            Color.RED,        // 红
+            Color.YELLOW      // 黄
+    };
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -532,27 +568,45 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                     int currentIndex = beginIndex + i;
                     Log.d(TAG, "图片路径 ：：" + pathFromUri + ",===> beginIndex:" + currentIndex);
 
-//                    alreadyList.add("");
-                    //判断是否是BMP图片
-                    if (FileUtils.isBMPPic(pathFromUri)) {
 
-                        if (FileUtils.isSizeNormal(pathFromUri)) {
-                            //既是BMP图片，且像素符合要求 * @param sourceFile原图片文件  * @param targetDirectory 目标目录    * @param targetFileName 目标文件名称
-                            String targetDirectory = FileUtils.getLocalBasePath();
-                            String targetFileName = UUID.randomUUID() + "_" + currentIndex + ".bmp";
-                            Log.d(TAG, "文件拷贝的地址：" + targetDirectory + "," + targetFileName);
-                            FileUtils.copyPic2CurrentFile(new File(pathFromUri), targetDirectory, targetFileName);
-                            File file = new File(targetDirectory, targetFileName);
-                            addPic(currentIndex, file.getPath());
-                        } else {
-                            //BMP图片不符合像素要求，裁剪图片
-                            resetPic(currentIndex);
-                        }
-
-                    } else {
-                        //不是BMP图片，判断尺寸是否满足
-                        resetPic(currentIndex);
+                    try {
+                        Bitmap bitmap = BitmapFactory.decodeFile(pathFromUri);
+                        bitmap = BMPUtils.increaseSaturation(bitmap);
+                        Bitmap afterBitmap = BMPUtils.applyAtkinsonDithering(bitmap, palette4Color);
+                        String targetDirectory = FileUtils.getLocalBasePath();
+                        String targetFileName = UUID.randomUUID() + "_" + currentIndex + ".png";
+                        Log.d(TAG, "文件保存的目录：" + targetDirectory + "," + targetFileName);
+                        File file = new File(targetDirectory, targetFileName);
+                        if (!file.exists())
+                            file.createNewFile();
+                        ImageUtil.saveBitmapToFile(afterBitmap, file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+
+//
+
+////                    alreadyList.add("");
+//                    //判断是否是BMP图片
+//                    if (FileUtils.isBMPPic(pathFromUri)) {
+//
+//                        if (FileUtils.isSizeNormal(pathFromUri)) {
+//                            //既是BMP图片，且像素符合要求 * @param sourceFile原图片文件  * @param targetDirectory 目标目录    * @param targetFileName 目标文件名称
+//                            String targetDirectory = FileUtils.getLocalBasePath();
+//                            String targetFileName = UUID.randomUUID() + "_" + currentIndex + ".bmp";
+//                            Log.d(TAG, "文件拷贝的地址：" + targetDirectory + "," + targetFileName);
+//                            FileUtils.copyPic2CurrentFile(new File(pathFromUri), targetDirectory, targetFileName);
+//                            File file = new File(targetDirectory, targetFileName);
+//                            addPic(currentIndex, file.getPath());
+//                        } else {
+//                            //BMP图片不符合像素要求，裁剪图片
+//                            resetPic(currentIndex);
+//                        }
+//
+//                    } else {
+//                        //不是BMP图片，判断尺寸是否满足
+//                        resetPic(currentIndex);
+//                    }
 
                 }
             }
