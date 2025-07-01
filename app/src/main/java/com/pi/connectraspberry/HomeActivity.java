@@ -530,13 +530,23 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
             Color.rgb(180, 180, 0)   // 深黄（减少绿色分量）
     };
 
-    int[] palette6Color = {
-            Color.BLACK,      // 黑
-            Color.WHITE,      // 白
-            Color.LTGRAY,     // 浅灰
-            Color.DKGRAY,     // 深灰
-            Color.RED,        // 红
-            Color.YELLOW      // 黄
+//    int[] palette6Color = {
+//            Color.BLACK,      // 黑
+//            Color.WHITE,      // 白
+//            Color.LTGRAY,     // 浅灰
+//            Color.DKGRAY,     // 深灰
+//            Color.RED,        // 红
+//            Color.YELLOW      // 黄
+//    };
+
+    // 6色墨水屏调色板（黑、白、蓝、黄、红、绿）
+    private static final int[] INK_PALETTE_6COLOR = {
+            Color.BLACK,                          // 黑
+            Color.WHITE,                          // 白
+            Color.rgb(0, 70, 255),                // 墨水屏蓝（减少绿色干扰）
+            Color.rgb(255, 180, 0),               // 墨水屏黄（偏橙黄更醒目）
+            Color.rgb(255, 40, 0),                // 墨水屏红（橙红更鲜艳）
+            Color.rgb(0, 150, 0)                  // 墨水屏绿（减少蓝色干扰）
     };
 
     @Override
@@ -572,7 +582,8 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                     try {
                         Bitmap bitmap = BitmapFactory.decodeFile(pathFromUri);
                         bitmap = BMPUtils.increaseSaturation(bitmap);
-                        Bitmap afterBitmap = BMPUtils.applyAtkinsonDithering(bitmap, palette4Color);
+//                        Bitmap afterBitmap = BMPUtils.applyAtkinsonDithering(bitmap, palette4Color);
+                        Bitmap afterBitmap = BMPUtils.applyAtkinsonDithering(bitmap, INK_PALETTE_6COLOR );
                         String targetDirectory = FileUtils.getLocalBasePath();
                         String targetFileName = UUID.randomUUID() + "_" + currentIndex + ".png";
                         Log.d(TAG, "文件保存的目录：" + targetDirectory + "," + targetFileName);
@@ -648,6 +659,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
             if (item.isEmpty()) {
                 iterator.remove();
             }
+
         }
     }
 
